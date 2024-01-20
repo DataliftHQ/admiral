@@ -6,17 +6,6 @@
 <p align="center">
   <em>Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications.</em>
 </p>
-<p align="center">
-  <a href="https://github.com/datalifthq/datalift/releases/latest" target="_blank">
-    <img src="https://img.shields.io/github/v/release/datalifthq/datalift?label=datalift" alt="Releases">
-  </a>
-  <a href="https://artifacthub.io/packages/search?page=1&org=datalift" target="_blank">
-    <img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/datalift" alt="Release">
-  </a>
-  <a href="https://goreportcard.com/report/github.com/datalifthq/datalift" target="_blank">
-    <img src="https://goreportcard.com/badge/datalifthq/datalift" alt="Go Report Card">
-  </a>
-</p>
 
 ### Contributing
 
