@@ -1,0 +1,6 @@
+# This file is described here: https://help.github.com/en/articles/about-code-owners
+
+* @DataliftHQ/maintainers
+
+# Doc owners
+/docs/ @DataliftHQ/maintainers @DataliftHQ/doc-maintainers
