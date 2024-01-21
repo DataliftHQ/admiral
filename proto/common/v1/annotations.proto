@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package datalift.common.v1;
+
+import "google/protobuf/descriptor.proto";
+
+import "common/v1/schema.proto";
+
+extend google.protobuf.MessageOptions {
+  // Use a random high number that won't conflict with annotations from other
+  // libraries.
+  Reference reference = 58901;
+  Identifier id = 58902;
+  bool redacted = 58903;
+}
+
+extend google.protobuf.FieldOptions {
+  // Use a random high number that won't conflict with annotations from other
+  // libraries.
+
+  // Fields with the log option set to false will be cleared during auditing.
+  // Defaults to true.
+  bool log = 58901;
+}
+
+extend google.protobuf.MethodOptions {
+  // Use a random high number that won't conflict with annotations from other
+  // libraries.
+  Action action = 58901;
+  bool disable_audit = 58902;
+}
