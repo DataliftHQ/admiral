@@ -1,0 +1,37 @@
+# https://github.com/golangci/golangci-lint
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - exportloopref
+    - gci
+    - gocritic
+    - gofmt
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - whitespace
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - singleCaseSwitch
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(go.datalift.io/datalift/server)
+issues:
+  max-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    - path: (_test\.go|mock\.go)
+      linters:
+        - gosec
+run:
+  timeout: 10m
+  skip-dirs:
+    - config/

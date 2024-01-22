@@ -14,26 +14,90 @@ PROJECT_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 help:
 	@grep -E '^\.PHONY: [a-zA-Z_-]+ .*?# .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = "(: |#)"}; {printf "%-30s %s\n", $$2, $$3}'
 
-.PHONY: all # Generate API, frontend, and server assets.
-all: api
+.PHONY: all # Generate proto, cli, ui, and server assets.
+all: proto server-with-assets cli ui
 
-.PHONY: api # Generate API assets.
-api:
-	@cd common && ../tools/buf.sh generate
-	@cd server && ../tools/buf.sh generate
+.PHONY: lint # Lint all of the code.
+lint: proto-lint server-lint cli-lint ui-lint
 
-.PHONY: api-lint # Lint the generated API assets.
-api-lint:
+.PHONY: lint-fix # Lint and fix all of the code.
+lint-fix: server-lint-fix cli-lint-fix ui-lint-fix
+
+.PHONY: verify # Verify all of the code.
+verify: proto-verify server-verify cli-verify ui-verify
+
+.PHONY: proto # Generate proto assets.
+proto:
+	@cd common && rm -rf api && ../tools/buf.sh generate
+	@cd server && rm -rf config && ../tools/buf.sh generate
+
+.PHONY: proto-lint # Lint the generated proto assets.
+proto-lint:
 	@cd common && ../tools/buf.sh lint
 	@cd server && ../tools/buf.sh lint
 
-.PHONY: api-verify # Verify API changes.
-api-verify:
+.PHONY: proto-verify # Verify proto changes.
+proto-verify:
 	find common/api -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
 	find server/config -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
-	@$(MAKE) api
+	@$(MAKE) proto
 	tools/ensure-no-diff.sh common/api server/config
 
-.PHONY: build # Build the standalone server.
-build:
-	@echo "build"
+.PHONY: server # Build the server.
+server:
+	CGO_ENABLED=0 go build -C server -o ../build/datalift-server -ldflags "-s -w -X main.version=$(VERSION)"
+
+.PHONY: server-with-assets # Build the server with ui assets.
+server-with-assets:
+#cd backend && go run cmd/assets/generate.go ../frontend/packages/app/build && go build -tags withAssets -o ../build/clutch -ldflags="-X main.version=$(VERSION)"
+	CGO_ENABLED=0 go build -C server -o ../build/datalift-server -ldflags "-s -w -X main.version=$(VERSION)"
+
+.PHONY: server-lint # Lint the server code.
+server-lint:
+	cd server && tools/golangci-lint.sh run
+
+.PHONY: server-lint-fix # Lint and fix the server code.
+server-lint-fix:
+	cd server && tools/golangci-lint.sh run --fix && go mod tidy
+
+.PHONY: server-verify # Verify go modules' requirements files are clean.
+server-verify:
+	cd server && go mod tidy
+	tools/ensure-no-diff.sh server
+
+.PHONY: cli # Build the CLI.
+cli:
+	CGO_ENABLED=0 go build -C cli -o ../build/datalift -ldflags "-s -w -X main.version=$(VERSION)"
+
+.PHONY: cli-lint # Lint the cli code.
+cli-lint:
+	cd cli && tools/golangci-lint.sh run
+
+.PHONY: cli-lint-fix # Lint and fix the cli code.
+cli-lint-fix:
+	cd cli && tools/golangci-lint.sh run --fix && go mod tidy
+
+.PHONY: cli-verify # Verify go modules' requirements files are clean.
+cli-verify:
+	cd cli && go mod tidy
+	tools/ensure-no-diff.sh cli
+
+.PHONY: ui # Build the UI.
+ui:
+	@echo "build ui"
+
+.PHONY: ui-lint # Lint the ui code.
+ui-lint:
+	@echo "lint fix"
+
+.PHONY: ui-lint-fix # Lint and fix the ui code.
+ui-lint-fix:
+	@echo "lint fix"
+
+.PHONY: ui-verify # Verify ui packages are sorted.
+ui-verify:
+	$(YARN) --cwd ui lint:packages
+
+.PHONY: dev # Start the start in development mode.
+dev:
+	@echo "dev"

@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 
 import "common/v1/annotations.proto";
 
-service HealthcheckAPI {
+service HealthcheckService {
   rpc Healthcheck(HealthcheckRequest) returns (HealthcheckResponse) {
     option (google.api.http) = {
       get: "/api/v1/healthcheck"

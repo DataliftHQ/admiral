@@ -46,11 +46,7 @@ jobs:
           done
       - name: Check for tidyness of go.mod and go.sum
         run: |
-          for mod in $(find . -name go.mod -print0 | xargs -0 -n1 dirname); do
-            pushd $mod
-            go mod tidy
-            popd
-          done
+          make server-verify cli-verify
           git diff --exit-code -- .
 
   build-go:
@@ -75,8 +71,8 @@ jobs:
             go mod download
             popd
           done
-      - name: Compile all packages
-        run: make build
+      - name: Compile server and cli packages
+        run: make server cli
 
 #  lint-go:
 #    name: 'Lint Go code'
