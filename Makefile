@@ -19,17 +19,20 @@ all: api
 
 .PHONY: api # Generate API assets.
 api:
-	@tools/buf.sh generate
+	@cd common && ../tools/buf.sh generate
+	@cd server && ../tools/buf.sh generate
 
 .PHONY: api-lint # Lint the generated API assets.
 api-lint:
-	@tools/buf.sh lint
+	@cd common && ../tools/buf.sh lint
+	@cd server && ../tools/buf.sh lint
 
 .PHONY: api-verify # Verify API changes.
 api-verify:
-	find pkg/api -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
-	$(MAKE) api
-	tools/ensure-no-diff.sh pkg/api
+	find common/api -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
+	find server/config -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} \;
+	@$(MAKE) api
+	tools/ensure-no-diff.sh common/api server/config
 
 .PHONY: build # Build the standalone server.
 build:

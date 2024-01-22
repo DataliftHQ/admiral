@@ -1,0 +1,17 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: go.datalift.io/datalift/server
+    except:
+      - buf.build/googleapis/googleapis
+      - buf.build/envoyproxy/protoc-gen-validate
+plugins:
+  - plugin: buf.build/protocolbuffers/go
+    out: .
+    opt:
+      - paths=source_relative
+  - plugin: buf.build/bufbuild/validate-go
+    out: .
+    opt:
+      - paths=source_relative
