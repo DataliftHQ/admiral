@@ -49,9 +49,9 @@ jobs:
           for mod in $(find . -name go.mod -print0 | xargs -0 -n1 dirname); do
             pushd $mod
             go mod tidy
-            git diff --exit-code -- .
             popd
           done
+          git diff --exit-code -- .
 
   build-go:
     name: 'Build & cache Go code'
