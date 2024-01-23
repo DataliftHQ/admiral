@@ -17,13 +17,25 @@
 # Go workspace file
 go.work
 
+# Logs
+logs
+*.log
+npm-debug.log*
+lerna-debug.log*
+
+# IDEs and editors
+.vscode/*
+!.vscode/extensions.json
+.idea
+
 # Misc
-.idea/
-.vscode/
 .DS_Store
 .env.local
 .air
 node_modules
+dist
+dist-ssr
+*.local
 generated_assets.go
 build/
 dist/

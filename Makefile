@@ -6,7 +6,7 @@ MAKEFLAGS += --no-print-directory
 DOCS_DEPLOY_USE_SSH ?= true
 DOCS_DEPLOY_GIT_USER ?= git
 
-VERSION := 0.0.0
+VERSION ?= 0.0.0-dev
 
 PROJECT_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -45,12 +45,11 @@ proto-verify:
 
 .PHONY: server # Build the server.
 server:
-	CGO_ENABLED=0 go build -C server -o ../build/datalift-server -ldflags "-s -w -X main.version=$(VERSION)"
+	cd server && CGO_ENABLED=0 go build -o ../build/datalift-server -ldflags "-s -w -X main.version=$(VERSION)"
 
 .PHONY: server-with-assets # Build the server with ui assets.
-server-with-assets:
-#cd backend && go run cmd/assets/generate.go ../frontend/packages/app/build && go build -tags withAssets -o ../build/clutch -ldflags="-X main.version=$(VERSION)"
-	CGO_ENABLED=0 go build -C server -o ../build/datalift-server -ldflags "-s -w -X main.version=$(VERSION)"
+server-with-assets: ui
+	cd server && go run cmd/assets/generate.go ../ui/build && CGO_ENABLED=0 go build -tags withAssets -o ../build/datalift-server -ldflags="-X main.version=$(VERSION)"
 
 .PHONY: server-lint # Lint the server code.
 server-lint:
@@ -83,21 +82,25 @@ cli-verify:
 	tools/ensure-no-diff.sh cli
 
 .PHONY: ui # Build the UI.
-ui:
-	@echo "build ui"
+ui: npm-install
+	npm --prefix ui run build
 
 .PHONY: ui-lint # Lint the ui code.
 ui-lint:
-	@echo "lint fix"
+	npm --prefix ui run lint
 
 .PHONY: ui-lint-fix # Lint and fix the ui code.
 ui-lint-fix:
-	@echo "lint fix"
+	npm --prefix ui run lint:fix
 
 .PHONY: ui-verify # Verify ui packages are sorted.
 ui-verify:
-	$(YARN) --cwd ui lint:packages
+	npm --prefix ui run lint:packages
 
 .PHONY: dev # Start the start in development mode.
 dev:
-	@echo "dev"
+	$(MAKE) -j2 server-dev ui-dev
+
+.PHONY: npm-install # Install ui dependencies.
+npm-install:
+	npm --prefix ui ci
