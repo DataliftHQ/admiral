@@ -152,7 +152,7 @@ func ParseBoolFromEnv(envVar string, defaultValue bool) bool {
 	return defaultValue
 }
 
-func ParseStringToStringFromEnv(envVar string, defaultValue map[string]string, seperator string) map[string]string {
+func ParseStringToStringFromEnv(envVar string, defaultValue map[string]string, separator string) map[string]string {
 	str := os.Getenv(envVar)
 	str = strings.TrimSpace(str)
 	if str == "" {
@@ -160,7 +160,7 @@ func ParseStringToStringFromEnv(envVar string, defaultValue map[string]string, s
 	}
 
 	parsed := make(map[string]string)
-	for _, pair := range strings.Split(str, seperator) {
+	for _, pair := range strings.Split(str, separator) {
 		keyvalue := strings.Split(pair, "=")
 		if len(keyvalue) != 2 {
 			log.Warnf("Invalid key-value pair when parsing environment '%s' as a string map", str)

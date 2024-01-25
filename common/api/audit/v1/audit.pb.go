@@ -93,7 +93,7 @@ type GetEventsRequest struct {
 	//	*GetEventsRequest_Since
 	Window isGetEventsRequest_Window `protobuf_oneof:"window"`
 	// Currently page_token specifies the page number you wish to request.
-	// The rationale behind the naming is we might changes this to a cursor implentation
+	// The rationale behind the naming is we might changes this to a cursor implementation
 	// in the future and did not want to break existing implementations of the API.
 	// https://cloud.google.com/apis/design/design_patterns#list_pagination
 	PageToken string `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`

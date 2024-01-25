@@ -41,7 +41,7 @@ message GetEventsRequest {
     google.protobuf.Duration since = 2;
   }
   // Currently page_token specifies the page number you wish to request.
-  // The rationale behind the naming is we might changes this to a cursor implentation
+  // The rationale behind the naming is we might changes this to a cursor implementation
   // in the future and did not want to break existing implementations of the API.
   // https://cloud.google.com/apis/design/design_patterns#list_pagination
   string page_token = 3;
