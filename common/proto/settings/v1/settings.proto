@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 
 import "common/v1/annotations.proto";
 
-service SettingsService {
+service SettingsAPI {
   rpc Settings(SettingsRequest) returns (SettingsResponse) {
     option (google.api.http) = {
       get: "/api/v1/settings"

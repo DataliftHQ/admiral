@@ -58,15 +58,14 @@ func (c *auditAPIClient) GetEvent(ctx context.Context, in *GetEventRequest, opts
 }
 
 // AuditAPIServer is the server API for AuditAPI service.
-// All implementations must embed UnimplementedAuditAPIServer
+// All implementations should embed UnimplementedAuditAPIServer
 // for forward compatibility
 type AuditAPIServer interface {
 	GetEvents(context.Context, *GetEventsRequest) (*GetEventsResponse, error)
 	GetEvent(context.Context, *GetEventRequest) (*GetEventResponse, error)
-	mustEmbedUnimplementedAuditAPIServer()
 }
 
-// UnimplementedAuditAPIServer must be embedded to have forward compatible implementations.
+// UnimplementedAuditAPIServer should be embedded to have forward compatible implementations.
 type UnimplementedAuditAPIServer struct {
 }
 
@@ -76,7 +75,6 @@ func (UnimplementedAuditAPIServer) GetEvents(context.Context, *GetEventsRequest)
 func (UnimplementedAuditAPIServer) GetEvent(context.Context, *GetEventRequest) (*GetEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEvent not implemented")
 }
-func (UnimplementedAuditAPIServer) mustEmbedUnimplementedAuditAPIServer() {}
 
 // UnsafeAuditAPIServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to AuditAPIServer will

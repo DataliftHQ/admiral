@@ -17,8 +17,8 @@ type Registrar interface {
 	RegisterJSONGateway(GatewayRegisterAPIHandlerFunc) error
 }
 
-type Module interface {
+type Endpoint interface {
 	Register(Registrar) error
 }
 
-type Factory map[string]func(*anypb.Any, *zap.Logger, tally.Scope) (Module, error)
+type Factory map[string]func(*anypb.Any, *zap.Logger, tally.Scope) (Endpoint, error)

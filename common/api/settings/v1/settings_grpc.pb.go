@@ -19,89 +19,87 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	SettingsService_Settings_FullMethodName = "/datalift.settings.v1.SettingsService/Settings"
+	SettingsAPI_Settings_FullMethodName = "/datalift.settings.v1.SettingsAPI/Settings"
 )
 
-// SettingsServiceClient is the client API for SettingsService service.
+// SettingsAPIClient is the client API for SettingsAPI service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type SettingsServiceClient interface {
+type SettingsAPIClient interface {
 	Settings(ctx context.Context, in *SettingsRequest, opts ...grpc.CallOption) (*SettingsResponse, error)
 }
 
-type settingsServiceClient struct {
+type settingsAPIClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewSettingsServiceClient(cc grpc.ClientConnInterface) SettingsServiceClient {
-	return &settingsServiceClient{cc}
+func NewSettingsAPIClient(cc grpc.ClientConnInterface) SettingsAPIClient {
+	return &settingsAPIClient{cc}
 }
 
-func (c *settingsServiceClient) Settings(ctx context.Context, in *SettingsRequest, opts ...grpc.CallOption) (*SettingsResponse, error) {
+func (c *settingsAPIClient) Settings(ctx context.Context, in *SettingsRequest, opts ...grpc.CallOption) (*SettingsResponse, error) {
 	out := new(SettingsResponse)
-	err := c.cc.Invoke(ctx, SettingsService_Settings_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, SettingsAPI_Settings_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// SettingsServiceServer is the server API for SettingsService service.
-// All implementations must embed UnimplementedSettingsServiceServer
+// SettingsAPIServer is the server API for SettingsAPI service.
+// All implementations should embed UnimplementedSettingsAPIServer
 // for forward compatibility
-type SettingsServiceServer interface {
+type SettingsAPIServer interface {
 	Settings(context.Context, *SettingsRequest) (*SettingsResponse, error)
-	mustEmbedUnimplementedSettingsServiceServer()
 }
 
-// UnimplementedSettingsServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedSettingsServiceServer struct {
+// UnimplementedSettingsAPIServer should be embedded to have forward compatible implementations.
+type UnimplementedSettingsAPIServer struct {
 }
 
-func (UnimplementedSettingsServiceServer) Settings(context.Context, *SettingsRequest) (*SettingsResponse, error) {
+func (UnimplementedSettingsAPIServer) Settings(context.Context, *SettingsRequest) (*SettingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Settings not implemented")
 }
-func (UnimplementedSettingsServiceServer) mustEmbedUnimplementedSettingsServiceServer() {}
 
-// UnsafeSettingsServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to SettingsServiceServer will
+// UnsafeSettingsAPIServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SettingsAPIServer will
 // result in compilation errors.
-type UnsafeSettingsServiceServer interface {
-	mustEmbedUnimplementedSettingsServiceServer()
+type UnsafeSettingsAPIServer interface {
+	mustEmbedUnimplementedSettingsAPIServer()
 }
 
-func RegisterSettingsServiceServer(s grpc.ServiceRegistrar, srv SettingsServiceServer) {
-	s.RegisterService(&SettingsService_ServiceDesc, srv)
+func RegisterSettingsAPIServer(s grpc.ServiceRegistrar, srv SettingsAPIServer) {
+	s.RegisterService(&SettingsAPI_ServiceDesc, srv)
 }
 
-func _SettingsService_Settings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SettingsAPI_Settings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SettingsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SettingsServiceServer).Settings(ctx, in)
+		return srv.(SettingsAPIServer).Settings(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SettingsService_Settings_FullMethodName,
+		FullMethod: SettingsAPI_Settings_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SettingsServiceServer).Settings(ctx, req.(*SettingsRequest))
+		return srv.(SettingsAPIServer).Settings(ctx, req.(*SettingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// SettingsService_ServiceDesc is the grpc.ServiceDesc for SettingsService service.
+// SettingsAPI_ServiceDesc is the grpc.ServiceDesc for SettingsAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var SettingsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "datalift.settings.v1.SettingsService",
-	HandlerType: (*SettingsServiceServer)(nil),
+var SettingsAPI_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "datalift.settings.v1.SettingsAPI",
+	HandlerType: (*SettingsAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Settings",
-			Handler:    _SettingsService_Settings_Handler,
+			Handler:    _SettingsAPI_Settings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
