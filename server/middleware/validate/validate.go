@@ -10,7 +10,7 @@ import (
 	"go.datalift.io/datalift/server/middleware"
 )
 
-const Name = "clutch.middleware.validate"
+const Name = "datalift.middleware.validate"
 
 func New(cfg *anypb.Any, logger *zap.Logger, scope tally.Scope) (middleware.Middleware, error) {
 	return &mid{}, nil
