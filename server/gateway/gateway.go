@@ -150,7 +150,7 @@ func RunWithConfig(f *Flags, cfg *gatewayv1.Config, cf *ComponentFactory, assets
 
 	// All other configured middleware.
 	for _, mCfg := range cfg.Gateway.Middleware {
-		logger := logger.With(zap.String("moduleName", mCfg.Name))
+		logger := logger.With(zap.String("middlewareName", mCfg.Name))
 
 		factory, ok := cf.Middleware[mCfg.Name]
 		if !ok {
@@ -173,7 +173,6 @@ func RunWithConfig(f *Flags, cfg *gatewayv1.Config, cf *ComponentFactory, assets
 		interceptors = append(interceptors, m.UnaryInterceptor())
 	}
 
-	// Instantiate and register modules listed in the configuration.
 	rpcMux, err := mux.New(interceptors, assets, metricsHandler, cfg.Gateway)
 	if err != nil {
 		panic(err)
@@ -222,7 +221,7 @@ func RunWithConfig(f *Flags, cfg *gatewayv1.Config, cf *ComponentFactory, assets
 			logger.Fatal("endpoint config validation failed", zap.Error(err))
 		}
 
-		logger.Info("registering module")
+		logger.Info("registering endpoint")
 		endp, err := factory(endpCfg.TypedConfig, logger, scope.SubScope(
 			strings.TrimPrefix(endpCfg.Name, componentPrefix)))
 		if err != nil {
