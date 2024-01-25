@@ -15,7 +15,7 @@ import (
 const warning = `
 Server was not generated with embedded assets. Only API endpoints are available.
 For development, you probably want to use the development server.
-For production, either embed assets using the generator and building with the withAssets tag or serve your frontend separately from a CDN or a different server.
+For production, either embed assets using the generator and building with the withAssets tag or serve your ui separately from a CDN or a different server.
 `
 
 // Below is a simple asset server based on vfsgen for purpose of serving the warning. Do not modify.
