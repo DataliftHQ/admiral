@@ -5,14 +5,12 @@ on:
     branches:
       - 'master'
       - 'release-[0-9]+.[0-9]+'
-      - 'development'
   pull_request:
     branches:
       - 'master'
       - 'release-[0-9]+.[0-9]+'
-      - 'development'
-#  schedule:
-#    - cron: '29 4 * * 6'
+  schedule:
+    - cron: '29 4 * * 6'
 
 jobs:
   analyze:
@@ -31,14 +29,14 @@ jobs:
           - 'javascript-typescript'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@0b21cf2492b6b02c465a3e5d7c473717ad7721ba # v3.23.1
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@0b21cf2492b6b02c465a3e5d7c473717ad7721ba # v3.23.1
         with:
           category: "/language:${{matrix.language}}"
