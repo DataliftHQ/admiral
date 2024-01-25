@@ -19,7 +19,7 @@ func TestGetAction(t *testing.T) {
 	r := &endpointmock.MockRegistrar{Server: grpc.NewServer()}
 	err = hc.Register(r)
 	assert.NoError(t, err)
-	
+
 	grpc_health_v1.RegisterHealthServer(r.GRPCServer(), &grpc_health_v1.UnimplementedHealthServer{})
 
 	err = GenerateGRPCMetadata(r.GRPCServer())
