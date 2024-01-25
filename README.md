@@ -19,6 +19,10 @@ Datalift takes security issues very seriously. **Please do not file GitHub issue
 
 See the [LICENSE](https://github.com/datalifthq/datalift/tree/master/LICENSE) file for licensing information
 
+### Special Thanks
+
+The server component is built upon the foundation set by the [Clutch](https://clutch.sh/) team. Thank you for providing a well-thought-out and extensible Go-based API server.
+
 ### Thank You
 
 Datalift would not be possible without the support and assistance of other open-source tools and companies.
