@@ -1,88 +1,91 @@
+project_name: datalift
+
+env:
+  - DOCKER_CLI_EXPERIMENTAL=enabled
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - make ui cli-completions cli-manpages
+
 snapshot:
   name_template: "{{ incpatch .Version }}-dev"
 
 report_sizes: true
 
-before:
-  hooks:
-    - make ui
-
 builds:
-  - id: datalift
+  - id: datalift-cli
     binary: datalift
     dir: cli
-    env:
-      - CGO_ENABLED=0
+    hooks:
+      pre:
+        - cmd: cd cli && ./scripts/completions.sh
+          output: true
+        - cmd: cd cli && ./scripts/manpages.sh
+          output: true
+    mod_timestamp: &build-timestamp '{{ .CommitTimestamp }}'
+    flags: &build-flags |
+      -v
+      -trimpath
+    ldflags: &build-ldflags |
+      -w
+      -s
+      -extldflags="-static"
+      -X main.version={{ .Version }}
+      -X main.commit={{ .FullCommit }}
+      -X main.date={{ .CommitDate }}
+      -X main.builtBy=datalift
     goos:
       - linux
       - darwin
+      - windows
     goarch:
-      - "386"
       - amd64
-      - arm
       - arm64
-    goarm:
-      - "7"
+      - s390x
+      - ppc64le
     ignore:
+      - goos: darwin
+        goarch: s390x
+      - goos: darwin
+        goarch: ppc64le
       - goos: windows
-        goarch: arm
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w -X main.version=$(VERSION)"
-  - id: datalift-migrate
-    main: ./cmd/migrate
-    binary: datalift-migrate
-    dir: server
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - "386"
-      - amd64
-      - arm
-      - arm64
-    goarm:
-      - "7"
-    ignore:
+        goarch: s390x
       - goos: windows
-        goarch: arm
-    mod_timestamp: "{{ .CommitTimestamp }}"
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w -X main.version=$(VERSION)"
+        goarch: ppc64le
+      - goos: windows
+        goarch: arm64
 
   - id: datalift-server
     binary: datalift-server
     dir: server
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - "386"
-      - amd64
-      - arm
-      - arm64
-    goarm:
-      - "7"
-    ignore:
-      - goos: windows
-        goarch: arm
-    mod_timestamp: "{{ .CommitTimestamp }}"
     hooks:
       pre:
         - cmd: go -C server run cmd/assets/generate.go ../ui/build
           output: true
-    flags:
-      - -tags=withAssets -trimpath
-    ldflags:
-      - -s -w -X main.version=$(VERSION)"
+    mod_timestamp: *build-timestamp
+    flags: *build-flags
+    ldflags: *build-ldflags
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+      - s390x
+      - ppc64le
+    ignore:
+      - goos: darwin
+        goarch: s390x
+      - goos: darwin
+        goarch: ppc64le
+      - goos: windows
+        goarch: s390x
+      - goos: windows
+        goarch: ppc64le
+      - goos: windows
+        goarch: arm64
 
 checksum:
   name_template: 'checksums.txt'
@@ -120,6 +123,9 @@ changelog:
     - title: Other work
       order: 9999
 
+sboms:
+  - artifacts: archive
+
 archives:
   - name_template: >-
       {{ .ProjectName }}-{{ .Version }}_{{ .Os }}_
@@ -135,9 +141,185 @@ archives:
     files:
       - README.md
       - LICENSE
+      - src: "cli/completions/*"
+        dst: completions
+      - src: "cli/manpages/*"
+        dst: manpages
 
-sboms:
-  - artifacts: archive
+brews:
+  - name: datalift
+    folder: Formula
+    goarm: "7"
+    homepage: &website https://datalift.io/
+    description: Datalift CLI utility
+    license: Apache-2.0
+    commit_author:
+      name: release-bot
+      email: release-bot@datalift.io
+    test: |
+      system "#{bin}/datalift --version"
+    install: |-
+      bin.install "datalift"
+      bash_completion.install "completions/datalift.bash" => "datalift"
+      zsh_completion.install "completions/datalift.zsh" => "_datalift"
+      fish_completion.install "completions/datalift.fish"
+      man1.install "manpages/datalift.1.gz"
+    repository:
+      owner: DataliftHQ
+      name: homebrew-tap
+    caveats: "❤ Thanks for installing the Datalift!"
+
+nfpms:
+  - id: datalift
+    file_name_template: >-
+      {{ .ProjectName }}-{{ .Version }}_{{ .Os }}_
+      {{- if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    license: Apache 2.0
+    maintainer: Datalift
+    homepage: *website
+    description: &description Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications.
+    formats:
+      - rpm
+      - deb
+
+scoops:
+  - name: datalift
+    repository:
+      owner: DataliftHQ
+      name: scoop-bucket
+    folder: bucket
+    homepage: *website
+    description: *description
+    license: Apache-2.0
+    commit_author:
+      name: release-bot
+      email: release-bot@datalift.io
+
+snapcrafts:
+  - name_template: "{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    summary: Platform Orchestrator
+    description: *description
+    grade: devel
+    confinement: classic
+    publish: true
+
+dockers:
+  # Datalift CLI
+  - image_templates:
+      - "datalifthq/datalift:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-amd64"
+    dockerfile: cli/Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
+      - "--label=io.artifacthub.package.license=Apache-2.0"
+      - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=datalift-cli"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+    extra_files:
+      - cli/scripts/entrypoint.sh
+  - image_templates:
+      - "datalifthq/datalift:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-arm64"
+    dockerfile: cli/Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
+      - "--label=io.artifacthub.package.license=Apache-2.0"
+      - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=datalift-cli"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    extra_files:
+      - cli/scripts/entrypoint.sh
+
+  # Datalift Server
+  - image_templates:
+      - "datalifthq/datalift-server:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-amd64"
+    dockerfile: server/Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
+      - "--label=io.artifacthub.package.license=Apache-2.0"
+      - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=datalift-server"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+    extra_files:
+      - server/config.yaml
+  - image_templates:
+      - "datalifthq/datalift-server:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-arm64"
+    dockerfile: server/Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
+      - "--label=io.artifacthub.package.license=Apache-2.0"
+      - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name=datalift-server"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    extra_files:
+      - server/config.yaml
+
+docker_manifests:
+  # Datalift CLI
+  - name_template: "datalifthq/datalift:v{{ .Version }}"
+    image_templates:
+      - "datalifthq/datalift:v{{ .Version }}-amd64"
+      - "datalifthq/datalift:v{{ .Version }}-arm64"
+  - name_template: "datalifthq/datalift-server:latest"
+    image_templates:
+      - "datalifthq/datalift:v{{ .Version }}-amd64"
+      - "datalifthq/datalift:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/datalift:v{{ .Version }}"
+    image_templates:
+      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/datalift:latest"
+    image_templates:
+      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-arm64"
+  # Datalift Server
+  - name_template: "datalifthq/datalift-server:v{{ .Version }}"
+    image_templates:
+      - "datalifthq/datalift-server:v{{ .Version }}-amd64"
+      - "datalifthq/datalift-server:v{{ .Version }}-arm64"
+  - name_template: "datalifthq/datalift-server:latest"
+    image_templates:
+      - "datalifthq/datalift-server:v{{ .Version }}-amd64"
+      - "datalifthq/datalift-server:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/datalift-server:v{{ .Version }}"
+    image_templates:
+      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/datalift-server:latest"
+    image_templates:
+      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-arm64"
 
 release:
   footer: |
