@@ -3,9 +3,9 @@ package healthcheck
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	healthcheckv1 "go.datalift.io/datalift/common/api/healthcheck/v1"
 	"go.datalift.io/datalift/server/endpoint"
@@ -15,7 +15,7 @@ const (
 	Name = "datalift.module.healthcheck"
 )
 
-func New(*any.Any, *zap.Logger, tally.Scope) (endpoint.Endpoint, error) {
+func New(*anypb.Any, *zap.Logger, tally.Scope) (endpoint.Endpoint, error) {
 	endp := &endp{
 		api: newAPI(),
 	}
