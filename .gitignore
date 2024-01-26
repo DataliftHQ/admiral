@@ -41,3 +41,4 @@ build/
 dist/
 completions/
 manpages/
+NOTES.md
