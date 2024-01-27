@@ -1,0 +1,92 @@
+name: 'CI'
+
+on: 
+  push:
+    paths-ignore:
+      - '*.md'
+    branches:
+      - 'master'
+      - 'release-[0-9]+.[0-9]+'
+      - 'development'
+  pull_request:
+    paths-ignore:
+      - '*.md'
+    branches:
+      - 'master'
+      - 'release-[0-9]+.[0-9]+'
+      - 'development'
+
+env:
+  GOLANG_VERSION: '1.21'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check-go:
+    name: 'Validate Go modules'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Setup Golang
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: Download all Go modules
+        run: |
+          for mod in $(find . -name go.mod -print0 | xargs -0 -n1 dirname); do
+            pushd $mod
+            go mod download
+            popd
+          done
+      - name: Check for tidyness of go.mod and go.sum
+        run: |
+          make server-verify cli-verify
+          git diff --exit-code -- .
+
+  build-go:
+    name: 'Build & cache Go code'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Setup Golang
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: Restore go build cache
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-build-v1-${{ github.run_id }}
+      - name: Download all Go modules
+        run: |
+          for mod in $(find . -name go.mod -print0 | xargs -0 -n1 dirname); do
+            pushd $mod
+            go mod download
+            popd
+          done
+      - name: Compile server and cli packages
+        run: make server cli
+
+#  lint-go:
+#    name: 'Lint Go code'
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+#      - name: Setup Golang
+#        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.0.0
+#        with:
+#          go-version: ${{ env.GOLANG_VERSION }}
+#      - name: Restore go build cache
+#        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+#        with:
+#          path: ~/.cache/go-build
+#          key: ${{ runner.os }}-go-build-v1-${{ github.run_id }}
+#      - run: make go-lint

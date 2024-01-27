@@ -1,0 +1,79 @@
+name: Publish Datalift Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+
+env:
+  GOLANG_VERSION: '1.21'
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-22.04
+    env:
+      DOCKER_CLI_EXPERIMENTAL: "enabled"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+      - name: Setup Arduino
+        uses: arduino/setup-task@e26d8975574116b0097a1161e0fe16ba75d84c1c # v1.0.3
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+      - name: Setup Snapcraft
+        run: |
+          sudo apt-get update
+          sudo apt-get -yq --no-install-suggests --no-install-recommends install snapcraft
+          mkdir -p $HOME/.cache/snapcraft/download
+          mkdir -p $HOME/.cache/snapcraft/stage-packages
+      - name: Setup Golang
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version: ${{ env.GOLANG_VERSION }}
+      - name: Set up Cache
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          path: |
+            ./dist/*.deb
+            ./dist/*.rpm
+            ./dist/*.apk
+          key: ${{ github.ref }}
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149 # v3.3.0
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@24b0d5238516480139aa8bc6f92eeb7b54a9eb0a # v0.15.5
+      - name: Install UPX
+        uses: crazy-max/ghaction-upx@0fc45e912669ba9e8fa2b430e97c8da2a632e29b # v3.0.0
+        with:
+          install-only: true
+      - name: Dockerhub login
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: GitHub Container Registry login
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean

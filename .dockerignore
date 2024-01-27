@@ -1,0 +1,15 @@
+.idea/
+.vscode/
+.DS_STORE
+
+# git
+.git/
+.github/
+**/.gitattributes
+**/.gitignore
+
+# build tools
+build/
+
+# docs
+docs/

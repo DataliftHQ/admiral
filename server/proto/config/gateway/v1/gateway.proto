@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package datalift.config.gateway.v1;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
+import "validate/validate.proto";
+import "config/middleware/accesslog/v1/accesslog.proto";
+
+message Config {
+  GatewayOptions gateway = 1 [ (validate.rules).message = {required : true} ];
+
+  repeated Service services = 2;
+  repeated Endpoint endpoints = 3;
+
+  // External config files to extend and compose into a consolidated config
+  repeated string extends = 4;
+}
+
+message TCPSocket {
+  string address = 1 [ (validate.rules).string = {min_bytes : 1} ];
+  uint32 port = 2 [ (validate.rules).uint32 = {lte : 65535} ];
+  bool secure = 3;
+}
+
+message Listener {
+  oneof socket {
+    option (validate.required) = true;
+
+    TCPSocket tcp = 1;
+  }
+}
+
+message Stats {
+
+  // Counters, gauges and histograms (i.e. everything except timers) are buffered at the specified interval.
+  google.protobuf.Duration flush_interval = 1 [ (validate.rules).duration.gte.nanos = 100000000 ];
+
+  message LogReporter {
+  }
+
+  message StatsdReporter {
+    string address = 1;
+
+    message PointTags {
+      string separator = 1 [ (validate.rules).string = {min_bytes : 1} ];
+    }
+    oneof tag_mode {
+      PointTags point_tags = 2;
+    }
+  }
+
+  message PrometheusReporter {
+    string handler_path = 1;
+  }
+
+  // The reporter to emit stats. If none specified, then stats will not be reported.
+  oneof reporter {
+    LogReporter log_reporter = 2;
+    StatsdReporter statsd_reporter = 3;
+    PrometheusReporter prometheus_reporter = 5;
+  }
+
+  message GoRuntimeStats {
+    // Collection interval defaults to 10 seconds
+    google.protobuf.Duration collection_interval = 1 [ (validate.rules).duration.gte.nanos = 100000000 ];
+  }
+
+  // Collect go runtime stats, this is disabled by default.
+  GoRuntimeStats go_runtime_stats = 4;
+
+  // the prefix for the stats. If none specified, the default is "datalift"
+  string prefix = 6;
+}
+
+message Timeouts {
+  // Default timeout to apply to all requests.
+  google.protobuf.Duration default = 1 [ (validate.rules).duration = {
+    required : true,
+    gte : {seconds : 1},
+  } ];
+
+  message Entry {
+    string service = 1;
+    string method = 2;
+    google.protobuf.Duration timeout = 3 [ (validate.rules).duration = {
+      required : true,
+      gte : {seconds : 1},
+    } ];
+  }
+  repeated Entry overrides = 2;
+}
+
+message GatewayOptions {
+  Listener listener = 1 [ (validate.rules).message = {required : true} ];
+  Listener json_grpc_loopback_listener = 2;
+
+  Logger logger = 3 [ (validate.rules).message = {required : true} ];
+  Stats stats = 4 [ (validate.rules).message = {required : true} ];
+
+  Timeouts timeouts = 5;
+
+  repeated Middleware middleware = 6;
+
+  Assets assets = 7;
+
+  bool enable_pprof = 8;
+
+  datalift.config.middleware.accesslog.v1.Config accesslog = 9;
+
+  // Maximum allowed size of a gRPC response (before transcoding to JSON). Defaults to 4MB (i.e. 4194304 bytes).
+  uint32 max_response_size_bytes = 10;
+
+  // Whether or not cookies should be sent with the 'Secure' flag. Default value is true.
+  google.protobuf.BoolValue secure_cookies = 11;
+}
+
+// Assets configuration provide a passthrough host for frontend static assets.
+// This is useful if you dont have the ability to enable sticky sessions or a blue/green deploy system in place.
+message Assets {
+  // To use the S3Provider you must have the AWS service configured
+  message S3Provider {
+    string region = 1;
+    string bucket = 2;
+    // key is the path to frontend static assets in the configured bucket
+    string key = 3;
+  }
+
+  oneof provider {
+    S3Provider s3 = 1;
+  }
+}
+
+message Logger {
+  enum Level {
+    UNSPECIFIED = 0;
+    DEBUG = 1;
+    INFO = 2;
+    WARN = 3;
+    ERROR = 4;
+    PANIC = 5;
+    FATAL = 6;
+  }
+  Level level = 1;
+
+  oneof format {
+    bool pretty = 2;
+  }
+
+  // Namespace will set a zap.Namespace for your logging fields to be nested in.
+  // https://pkg.go.dev/go.uber.org/zap?utm_source=godoc#Namespace
+  string namespace = 3;
+}
+
+message Middleware {
+  string name = 1 [ (validate.rules).string = {min_bytes : 1} ];
+  google.protobuf.Any typed_config = 2;
+}
+
+message Service {
+  string name = 1 [ (validate.rules).string = {min_bytes : 1} ];
+  google.protobuf.Any typed_config = 2;
+}
+
+message Endpoint {
+  string name = 1 [ (validate.rules).string = {min_bytes : 1} ];
+  google.protobuf.Any typed_config = 2;
+}

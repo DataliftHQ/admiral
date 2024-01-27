@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package datalift.settings.v1;
+
+import "google/api/annotations.proto";
+
+import "common/v1/annotations.proto";
+
+service SettingsAPI {
+  rpc Settings(SettingsRequest) returns (SettingsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/settings"
+    };
+    option (datalift.common.v1.action).type = READ;
+  }
+}
+
+message OIDCConfig {
+  string name = 1;
+  string issuer = 2;
+  string client_id = 3;
+  string cli_client_id = 4;
+  repeated string scopes = 5;
+}
+
+message SettingsRequest {}
+
+message SettingsResponse {
+  string url = 1;
+  OIDCConfig oidc_config = 2;
+}
