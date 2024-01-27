@@ -3,12 +3,12 @@ name: 'Lint Shell Scripts'
 on:
   push:
     branches:
-      - master
-      - development
+      - 'master'
+      - 'release-[0-9]+.[0-9]+'
   pull_request:
     branches:
-      - master
-      - development
+      - 'master'
+      - 'release-[0-9]+.[0-9]+'
     paths:
       - '**.sh'
       - .github/workflows/shellcheck.yml
