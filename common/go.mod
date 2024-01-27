@@ -8,7 +8,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/oauth2 v0.15.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240102182953-50ed04b92917
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240102182953-50ed04b92917
