@@ -104,3 +104,11 @@ dev:
 .PHONY: npm-install # Install ui dependencies.
 npm-install:
 	npm --prefix ui ci
+
+.PHONY: cli-completions # Generate cli shell completion scripts.
+cli-completions:
+	cd cli && ./scripts/completions.sh
+
+.PHONY: cli-manpages # Generate cli manpages.
+cli-manpages:
+	cd cli && ./scripts/manpages.sh
