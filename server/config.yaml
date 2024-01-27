@@ -21,7 +21,6 @@ gateway:
   middleware:
     - name: datalift.middleware.stats
     - name: datalift.middleware.validate
-#    - name: datalift.middleware.authn
   listener:
     tcp:
       address: 0.0.0.0
@@ -29,41 +28,3 @@ gateway:
       secure: false
 endpoints:
   - name: datalift.module.healthcheck
-#  - name: datalift.module.assets
-#  - name: datalift.module.authn
-#  - name: datalift.module.application
-#services: {}
-#  - name: datalift.service.db.postgres
-#    typed_config:
-#      "@type": types.google.com/datalift.config.service.db.postgres.v1.Config
-#      connection:
-#        host: ${DATALIFT_DATABASE_HOST}
-#        port: 5432
-#        dbname: ${DATALIFT_DATABASE_SCHEMA}
-#        user: ${DATALIFT_DATABASE_USER}
-#        password: ${DATALIFT_DATABASE_PASSWORD}
-#        ssl_mode: DISABLE
-#  - name: datalift.service.authn.storage
-#    typed_config:
-#      "@type": types.google.com/datalift.config.service.authn.v1.StorageConfig
-#      encryption_passphrase: ${DATALIFT_AUTHN_STORAGE_ENCRYPTION_PASSPHRASE}
-#  - name: datalift.service.authn
-#    typed_config:
-#      "@type": types.google.com/datalift.config.service.authn.v1.Config
-#      oidc:
-#        issuer: ${DATALIFT_AUTHN_ISSUER}
-#        client_id: ${DATALIFT_AUTHN_CLIENT_ID}
-#        client_secret: ${DATALIFT_AUTHN_CLIENT_SECRET}
-#        redirect_url: ${DATALIFT_AUTHN_CALLBACK}
-#        scopes:
-#          - openid
-#          - profile
-#          - email
-#      session_secret: ${DATALIFT_AUTHN_SESSION_SECRET}
-#      enable_service_token_creation: true
-#  - name: datalift.service.temporal
-#    typed_config:
-#      "@type": types.google.com/datalift.config.service.temporal.v1.Config
-#      host: localhost
-#      port: 7233
-#  - name: datalift.service.application
