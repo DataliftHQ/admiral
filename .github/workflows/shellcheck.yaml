@@ -3,12 +3,12 @@ name: 'Lint Shell Scripts'
 on:
   push:
     branches:
-      - master
-      - development
+      - 'master'
+      - 'release-[0-9]+.[0-9]+'
   pull_request:
     branches:
-      - master
-      - development
+      - 'master'
+      - 'release-[0-9]+.[0-9]+'
     paths:
       - '**.sh'
       - .github/workflows/shellcheck.yml
@@ -17,6 +17,7 @@ jobs:
   shellcheck:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - name: Run Shellcheck
         run: ./tools/shellcheck.sh
