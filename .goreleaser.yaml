@@ -345,3 +345,8 @@ release:
     ## Helping out
 
     This release is only possible thanks to **all** the support of some **awesome people**!
+
+announce:
+  slack:
+    enabled: true
+    channel: '#general'
