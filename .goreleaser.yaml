@@ -156,6 +156,7 @@ brews:
       system "#{bin}/datalift --version"
     install: |-
       bin.install "datalift"
+      bin.install_symlink "datalift" => "dl"
       bash_completion.install "completions/datalift.bash" => "datalift"
       zsh_completion.install "completions/datalift.zsh" => "_datalift"
       fish_completion.install "completions/datalift.fish"
@@ -209,7 +210,7 @@ nfpms:
         - changelog-file-missing-in-native-package
 
 scoops:
-  - name: datalift
+  - name: datalift-cli
     repository:
       owner: DataliftHQ
       name: scoop-bucket
@@ -224,8 +225,8 @@ scoops:
 dockers:
   # Datalift CLI
   - image_templates:
-      - "datalifthq/datalift:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-amd64"
+      - "datalifthq/datalift-cli:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-amd64"
     dockerfile: cli/Dockerfile
     use: buildx
     build_flag_templates:
@@ -243,8 +244,8 @@ dockers:
     extra_files:
       - cli/scripts/entrypoint.sh
   - image_templates:
-      - "datalifthq/datalift:v{{ .Version }}-arm64"
-      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-arm64"
+      - "datalifthq/datalift-cli:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-arm64"
     dockerfile: cli/Dockerfile
     use: buildx
     build_flag_templates:
@@ -304,22 +305,22 @@ dockers:
 
 docker_manifests:
   # Datalift CLI
-  - name_template: "datalifthq/datalift:v{{ .Version }}"
+  - name_template: "datalifthq/datalift-cli:v{{ .Version }}"
     image_templates:
-      - "datalifthq/datalift:v{{ .Version }}-amd64"
-      - "datalifthq/datalift:v{{ .Version }}-arm64"
-  - name_template: "datalifthq/datalift-server:latest"
+      - "datalifthq/datalift-cli:v{{ .Version }}-amd64"
+      - "datalifthq/datalift-cli:v{{ .Version }}-arm64"
+  - name_template: "datalifthq/datalift-cli:latest"
     image_templates:
-      - "datalifthq/datalift:v{{ .Version }}-amd64"
-      - "datalifthq/datalift:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/datalifthq/datalift:v{{ .Version }}"
+      - "datalifthq/datalift-cli:v{{ .Version }}-amd64"
+      - "datalifthq/datalift-cli:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}"
     image_templates:
-      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/datalifthq/datalift:latest"
+      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/datalift-cli:latest"
     image_templates:
-      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-arm64"
   # Datalift Server
   - name_template: "datalifthq/datalift-server:v{{ .Version }}"
     image_templates:
@@ -349,4 +350,4 @@ release:
 announce:
   slack:
     enabled: true
-    channel: '#general'
+    channel: '#announcements'
