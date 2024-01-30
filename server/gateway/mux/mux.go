@@ -82,7 +82,7 @@ func newCustomResponseForwarder(secureCookies bool) func(context.Context, http.R
 			cookie := &http.Cookie{
 				Name:     "refreshToken",
 				Value:    cookies[0],
-				Path:     "/v1/authn/login",
+				Path:     "/api/v1/authn/login",
 				HttpOnly: true, // Client cannot access refresh token, it is sent by browser only if login is attempted.
 				Secure:   secureCookies,
 			}
@@ -125,7 +125,7 @@ func customHeaderMatcher(key string) (string, bool) {
 func customErrorHandler(ctx context.Context, mux *runtime.ServeMux, m runtime.Marshaler, w http.ResponseWriter, req *http.Request, err error) {
 	if isBrowser(req.Header) { // Redirect if it's the browser (non-XHR).
 		if s, ok := status.FromError(err); ok && s.Code() == codes.Unauthenticated {
-			redirectPath := fmt.Sprintf("/v1/authn/login?redirect_url=%s", url.QueryEscape(req.RequestURI))
+			redirectPath := fmt.Sprintf("/api/v1/authn/login?redirect_url=%s", url.QueryEscape(req.RequestURI))
 			http.Redirect(w, req, redirectPath, http.StatusFound)
 			return
 		}
