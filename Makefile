@@ -112,3 +112,12 @@ cli-completions:
 .PHONY: cli-manpages # Generate cli manpages.
 cli-manpages:
 	cd cli && ./scripts/manpages.sh
+
+.PHONY: clean # Clean all build artifacts.
+clean:
+	@rm -rf build
+	@rm -rf dist
+	@rm -rf cli/completions
+	@rm -rf cli/manpages
+	@rm -rf ui/build
+	@rm -rf ui/node_modules
