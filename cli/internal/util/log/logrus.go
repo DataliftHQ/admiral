@@ -9,7 +9,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/sirupsen/logrus"
 
-	"go.datalift.io/datalift/cli/internal/common"
+	"go.datalift.io/admiral/cli/internal/common"
 )
 
 const (

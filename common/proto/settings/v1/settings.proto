@@ -1,17 +1,17 @@
 syntax = "proto3";
 
-package datalift.settings.v1;
+package admiral.settings.v1;
 
 import "google/api/annotations.proto";
 
-import "common/v1/annotations.proto";
+import "api/v1/annotations.proto";
 
 service SettingsAPI {
   rpc Settings(SettingsRequest) returns (SettingsResponse) {
     option (google.api.http) = {
       get: "/api/v1/settings"
     };
-    option (datalift.common.v1.action).type = READ;
+    option (admiral.api.v1.action).type = READ;
   }
 }
 

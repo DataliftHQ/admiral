@@ -9,10 +9,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 
-	"go.datalift.io/datalift/server/middleware"
+	"go.datalift.io/admiral/server/middleware"
 )
 
-const Name = "datalift.middleware.stats"
+const Name = "admiral.middleware.stats"
 
 func New(cfg *anypb.Any, logger *zap.Logger, scope tally.Scope) (middleware.Middleware, error) {
 	return &mid{

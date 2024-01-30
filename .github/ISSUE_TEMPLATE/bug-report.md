@@ -11,7 +11,7 @@ assignees: ''
 
 * [ ] I've searched the issue queue to verify this is not a duplicate bug report.
 * [ ] I've included steps to reproduce the bug.
-* [ ] I've pasted the output of `datalift --version`.
+* [ ] I've pasted the output of `admiral --version`.
 * [ ] I've pasted logs, if applicable.
 
 # Description
@@ -29,7 +29,7 @@ assignees: ''
 # Version
 
 ```
-Paste the output from `datalift --version` here.
+Paste the output from `admiral --version` here.
 ```
 
 # Logs

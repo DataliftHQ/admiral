@@ -1,8 +1,8 @@
-module go.datalift.io/datalift/server
+module go.datalift.io/admiral/server
 
 go 1.21.6
 
-replace go.datalift.io/datalift/common => ../common
+replace go.datalift.io/admiral/common => ../common
 
 require (
 	github.com/bufbuild/buf v1.29.0
@@ -17,7 +17,7 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20230704071429-0000e147ea92
 	github.com/stretchr/testify v1.8.4
 	github.com/uber-go/tally/v4 v4.1.10
-	go.datalift.io/datalift/common v0.0.0-00010101000000-000000000000
+	go.datalift.io/admiral/common v0.0.0-00010101000000-000000000000
 	go.uber.org/zap v1.26.0
 	golang.org/x/net v0.20.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240125205218-1f4bbc51befe

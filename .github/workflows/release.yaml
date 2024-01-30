@@ -1,4 +1,4 @@
-name: Publish Datalift Release
+name: Publish Release
 
 on:
   push:

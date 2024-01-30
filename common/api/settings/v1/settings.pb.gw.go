@@ -63,7 +63,7 @@ func RegisterSettingsAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/datalift.settings.v1.SettingsAPI/Settings", runtime.WithHTTPPathPattern("/api/v1/settings"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.settings.v1.SettingsAPI/Settings", runtime.WithHTTPPathPattern("/api/v1/settings"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -127,7 +127,7 @@ func RegisterSettingsAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/datalift.settings.v1.SettingsAPI/Settings", runtime.WithHTTPPathPattern("/api/v1/settings"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/admiral.settings.v1.SettingsAPI/Settings", runtime.WithHTTPPathPattern("/api/v1/settings"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

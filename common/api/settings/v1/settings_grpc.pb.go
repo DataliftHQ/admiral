@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	SettingsAPI_Settings_FullMethodName = "/datalift.settings.v1.SettingsAPI/Settings"
+	SettingsAPI_Settings_FullMethodName = "/admiral.settings.v1.SettingsAPI/Settings"
 )
 
 // SettingsAPIClient is the client API for SettingsAPI service.
@@ -94,7 +94,7 @@ func _SettingsAPI_Settings_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var SettingsAPI_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "datalift.settings.v1.SettingsAPI",
+	ServiceName: "admiral.settings.v1.SettingsAPI",
 	HandlerType: (*SettingsAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

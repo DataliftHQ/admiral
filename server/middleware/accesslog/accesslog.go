@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	accesslogv1 "go.datalift.io/datalift/server/config/middleware/accesslog/v1"
-	"go.datalift.io/datalift/server/gateway/log"
-	"go.datalift.io/datalift/server/gateway/meta"
-	"go.datalift.io/datalift/server/middleware"
+	accesslogv1 "go.datalift.io/admiral/server/config/middleware/accesslog/v1"
+	"go.datalift.io/admiral/server/gateway/log"
+	"go.datalift.io/admiral/server/gateway/meta"
+	"go.datalift.io/admiral/server/middleware"
 )
 
-const Name = "datalift.middleware.accesslog"
+const Name = "admiral.middleware.accesslog"
 
 func New(config *accesslogv1.Config, logger *zap.Logger, scope tally.Scope) (middleware.Middleware, error) {
 	var statusCodes []codes.Code
@@ -56,7 +56,7 @@ func (m *mid) UnaryInterceptor() grpc.UnaryServerInterceptor {
 			s = status.New(codes.OK, "")
 		}
 		code := s.Code()
-		// common logger context fields
+		// api logger context fields
 		fields := []zap.Field{
 			zap.String("service", service),
 			zap.String("method", method),

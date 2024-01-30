@@ -6,7 +6,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 
-	"go.datalift.io/datalift/server/endpoint"
+	"go.datalift.io/admiral/server/endpoint"
 )
 
 func newRegistrar(ctx context.Context, m *runtime.ServeMux, s *grpc.Server, c *grpc.ClientConn) endpoint.Registrar {

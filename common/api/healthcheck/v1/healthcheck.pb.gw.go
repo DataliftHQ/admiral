@@ -81,7 +81,7 @@ func RegisterHealthcheckAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/datalift.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/api/v1/healthcheck"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/api/v1/healthcheck"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -106,7 +106,7 @@ func RegisterHealthcheckAPIHandlerServer(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/datalift.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/healthz"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/healthz"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -170,7 +170,7 @@ func RegisterHealthcheckAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/datalift.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/api/v1/healthcheck"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/admiral.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/api/v1/healthcheck"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -192,7 +192,7 @@ func RegisterHealthcheckAPIHandlerClient(ctx context.Context, mux *runtime.Serve
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/datalift.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/healthz"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/admiral.healthcheck.v1.HealthcheckAPI/Healthcheck", runtime.WithHTTPPathPattern("/healthz"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

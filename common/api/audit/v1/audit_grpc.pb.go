@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	AuditAPI_GetEvents_FullMethodName = "/datalift.audit.v1.AuditAPI/GetEvents"
-	AuditAPI_GetEvent_FullMethodName  = "/datalift.audit.v1.AuditAPI/GetEvent"
+	AuditAPI_GetEvents_FullMethodName = "/admiral.audit.v1.AuditAPI/GetEvents"
+	AuditAPI_GetEvent_FullMethodName  = "/admiral.audit.v1.AuditAPI/GetEvent"
 )
 
 // AuditAPIClient is the client API for AuditAPI service.
@@ -127,7 +127,7 @@ func _AuditAPI_GetEvent_Handler(srv interface{}, ctx context.Context, dec func(i
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuditAPI_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "datalift.audit.v1.AuditAPI",
+	ServiceName: "admiral.audit.v1.AuditAPI",
 	HandlerType: (*AuditAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

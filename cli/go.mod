@@ -1,8 +1,8 @@
-module go.datalift.io/datalift/cli
+module go.datalift.io/admiral/cli
 
 go 1.21.6
 
-replace go.datalift.io/datalift/common => ../common
+replace go.datalift.io/admiral/common => ../common
 
 require (
 	github.com/bombsimon/logrusr/v2 v2.0.1
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
-	go.datalift.io/datalift/common v0.0.0-00010101000000-000000000000
+	go.datalift.io/admiral/common v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v2 v2.4.0
 )
 

@@ -45,11 +45,11 @@ proto-verify:
 
 .PHONY: server # Build the server.
 server:
-	cd server && CGO_ENABLED=0 go build -o ../build/datalift-server -ldflags "-s -w -X main.version=$(VERSION)"
+	cd server && CGO_ENABLED=0 go build -o ../build/admiral-server -ldflags "-s -w -X main.version=$(VERSION)"
 
 .PHONY: server-with-assets # Build the server with ui assets.
 server-with-assets: ui
-	cd server && go run cmd/assets/generate.go ../ui/build && CGO_ENABLED=0 go build -tags withAssets -o ../build/datalift-server -ldflags="-X main.version=$(VERSION)"
+	cd server && go run cmd/assets/generate.go ../ui/build && CGO_ENABLED=0 go build -tags withAssets -o ../build/admiral-server -ldflags="-X main.version=$(VERSION)"
 
 .PHONY: server-lint # Lint the server code.
 server-lint:
@@ -66,7 +66,7 @@ server-verify:
 
 .PHONY: cli # Build the CLI.
 cli:
-	CGO_ENABLED=0 go build -C cli -o ../build/datalift -ldflags "-s -w -X main.version=$(VERSION)"
+	CGO_ENABLED=0 go build -C cli -o ../build/admiral -ldflags "-s -w -X main.version=$(VERSION)"
 
 .PHONY: cli-lint # Lint the cli code.
 cli-lint:

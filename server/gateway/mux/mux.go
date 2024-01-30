@@ -22,7 +22,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
 )
 
 const (

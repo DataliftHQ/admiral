@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	healthcheckv1 "go.datalift.io/datalift/common/api/healthcheck/v1"
+	healthcheckv1 "go.datalift.io/admiral/common/api/healthcheck/v1"
 )
 
 func TestCopyHTTPResponse(t *testing.T) {

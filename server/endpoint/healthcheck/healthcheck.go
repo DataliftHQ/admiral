@@ -7,12 +7,12 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	healthcheckv1 "go.datalift.io/datalift/common/api/healthcheck/v1"
-	"go.datalift.io/datalift/server/endpoint"
+	healthcheckv1 "go.datalift.io/admiral/common/api/healthcheck/v1"
+	"go.datalift.io/admiral/server/endpoint"
 )
 
 const (
-	Name = "datalift.module.healthcheck"
+	Name = "admiral.module.healthcheck"
 )
 
 func New(*anypb.Any, *zap.Logger, tally.Scope) (endpoint.Endpoint, error) {

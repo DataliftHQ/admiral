@@ -19,8 +19,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"gopkg.in/yaml.v3"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
-	"go.datalift.io/datalift/server/middleware/timeouts"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
+	"go.datalift.io/admiral/server/middleware/timeouts"
 )
 
 type envFiles []string

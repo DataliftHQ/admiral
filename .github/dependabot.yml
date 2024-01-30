@@ -12,7 +12,7 @@ updates:
       include: "scope"
 
   - package-ecosystem: "gomod"
-    directory: "/common"
+    directory: "/api"
     schedule:
       interval: "daily"
       time: "08:00"

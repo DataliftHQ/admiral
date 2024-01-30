@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package datalift.config.middleware.accesslog.v1;
+package admiral.config.middleware.accesslog.v1;
 
 import "validate/validate.proto";
 

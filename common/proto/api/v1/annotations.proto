@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package datalift.common.v1;
+package admiral.api.v1;
 
 import "google/protobuf/descriptor.proto";
 
-import "common/v1/schema.proto";
+import "api/v1/schema.proto";
 
 extend google.protobuf.MessageOptions {
   // Use a random high number that won't conflict with annotations from other

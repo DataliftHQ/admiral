@@ -1,9 +1,9 @@
 package main
 
 import (
-	"go.datalift.io/datalift/server/cmd/assets"
-	"go.datalift.io/datalift/server/gateway"
-	"go.datalift.io/datalift/server/service"
+	"go.datalift.io/admiral/server/cmd/assets"
+	"go.datalift.io/admiral/server/gateway"
+	"go.datalift.io/admiral/server/service"
 )
 
 var MockServiceFactory = service.Factory{}
