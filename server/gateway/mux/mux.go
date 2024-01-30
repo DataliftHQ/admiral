@@ -31,7 +31,7 @@ const (
 	xForwardedHost = "X-Forwarded-Host"
 )
 
-var apiPattern = regexp.MustCompile(`^/v\d+/`)
+var apiPattern = regexp.MustCompile(`^/api/v\d+/`)
 
 type assetHandler struct {
 	assetCfg *gatewayv1.Assets
@@ -52,7 +52,7 @@ func copyHTTPResponse(resp *http.Response, w http.ResponseWriter) {
 }
 
 func (a *assetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if apiPattern.MatchString(r.URL.Path) || r.URL.Path == "/healthcheck" {
+	if apiPattern.MatchString(r.URL.Path) || r.URL.Path == "/healthz" {
 		a.next.ServeHTTP(w, r)
 		return
 	}
