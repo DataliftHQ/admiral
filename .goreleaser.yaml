@@ -28,7 +28,7 @@ builds:
       -X main.version={{ .Version }}
       -X main.commit={{ .FullCommit }}
       -X main.date={{ .CommitDate }}
-      -X main.builtBy="Datalift LLC."
+      -X main.builtBy=Datalift
     goos:
       - linux
       - darwin
