@@ -17,7 +17,7 @@ const (
 
 func New(*anypb.Any, *zap.Logger, tally.Scope) (endpoint.Endpoint, error) {
 	endp := &endp{
-		api: newAPI(),
+		api: newHealthcheckAPI(),
 	}
 	return endp, nil
 }
@@ -31,7 +31,7 @@ func (e *endp) Register(r endpoint.Registrar) error {
 	return r.RegisterJSONGateway(healthcheckv1.RegisterHealthcheckAPIHandler)
 }
 
-func newAPI() healthcheckv1.HealthcheckAPIServer {
+func newHealthcheckAPI() healthcheckv1.HealthcheckAPIServer {
 	return &healthcheckAPI{}
 }
 

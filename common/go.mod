@@ -5,7 +5,7 @@ go 1.21.6
 require (
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4

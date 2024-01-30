@@ -41,4 +41,5 @@ build/
 dist/
 completions/
 manpages/
+tmp/
 NOTES.md

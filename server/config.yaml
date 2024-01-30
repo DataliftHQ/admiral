@@ -28,3 +28,4 @@ gateway:
       secure: false
 endpoints:
   - name: admiral.module.healthcheck
+  - name: admiral.module.settings

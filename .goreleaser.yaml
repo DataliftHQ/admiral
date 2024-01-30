@@ -224,6 +224,7 @@ scoops:
     commit_author:
       name: release-bot
       email: release-bot@datalift.io
+    shortcuts: [["admiral.exe", "adm"]]
 
 dockers:
   # Admiral CLI

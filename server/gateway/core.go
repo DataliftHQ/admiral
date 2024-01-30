@@ -3,6 +3,7 @@ package gateway
 import (
 	"go.datalift.io/admiral/server/endpoint"
 	healthcheckendp "go.datalift.io/admiral/server/endpoint/healthcheck"
+	settingsendp "go.datalift.io/admiral/server/endpoint/settings"
 	"go.datalift.io/admiral/server/middleware"
 	"go.datalift.io/admiral/server/middleware/stats"
 	"go.datalift.io/admiral/server/middleware/validate"
@@ -16,6 +17,7 @@ var Middleware = middleware.Factory{
 
 var Endpoints = endpoint.Factory{
 	healthcheckendp.Name: healthcheckendp.New,
+	settingsendp.Name:    settingsendp.New,
 }
 
 var Services = service.Factory{}
