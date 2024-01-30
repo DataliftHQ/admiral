@@ -27,7 +27,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "license-checker": "^25.0.1",
-    "sort-package-json": "^2.6.0",
+    "sort-package-json": "^2.7.0",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
   }
