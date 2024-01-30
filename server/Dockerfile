@@ -1,6 +1,6 @@
 FROM gcr.io/distroless/base-debian12
 
-COPY admiral-server /admiral-server
-COPY server/config.yaml /config.yaml
+COPY admiral-server /
+COPY server/config.yaml /
 
-CMD ["/admiral-server"]
+ENTRYPOINT ["/admiral-server"]
