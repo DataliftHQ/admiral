@@ -18,7 +18,7 @@ builds:
     binary: admiral
     dir: cli
     mod_timestamp: &build-timestamp '{{ .CommitTimestamp }}'
-    flags: &build-flags |
+    flags: |
       -v
       -trimpath
     ldflags: &build-ldflags |
@@ -58,7 +58,10 @@ builds:
         - cmd: go -C server run cmd/assets/generate.go ../ui/build
           output: true
     mod_timestamp: *build-timestamp
-    flags: *build-flags
+    flags: |
+      -v
+      -trimpath
+      -tags withAssets
     ldflags: *build-ldflags
     goos:
       - linux
