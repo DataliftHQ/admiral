@@ -1,6 +1,6 @@
 FROM gcr.io/distroless/base-debian12
 
-COPY datalift-server /datalift-server
-COPY server/config.yaml /config.yaml
+COPY admiral-server /
+COPY server/config.yaml /
 
-CMD ["/datalift-server"]
+ENTRYPOINT ["/admiral-server"]

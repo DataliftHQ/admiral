@@ -18,19 +18,19 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
-	"go.datalift.io/datalift/server/endpoint"
-	"go.datalift.io/datalift/server/gateway/meta"
-	"go.datalift.io/datalift/server/gateway/mux"
-	"go.datalift.io/datalift/server/gateway/stats"
-	"go.datalift.io/datalift/server/middleware"
-	"go.datalift.io/datalift/server/middleware/accesslog"
-	"go.datalift.io/datalift/server/middleware/errorintercept"
-	"go.datalift.io/datalift/server/middleware/timeouts"
-	"go.datalift.io/datalift/server/service"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
+	"go.datalift.io/admiral/server/endpoint"
+	"go.datalift.io/admiral/server/gateway/meta"
+	"go.datalift.io/admiral/server/gateway/mux"
+	"go.datalift.io/admiral/server/gateway/stats"
+	"go.datalift.io/admiral/server/middleware"
+	"go.datalift.io/admiral/server/middleware/accesslog"
+	"go.datalift.io/admiral/server/middleware/errorintercept"
+	"go.datalift.io/admiral/server/middleware/timeouts"
+	"go.datalift.io/admiral/server/service"
 )
 
-const componentPrefix = "datalift."
+const componentPrefix = "admiral."
 
 type ComponentFactory struct {
 	Services   service.Factory
@@ -310,7 +310,7 @@ func getStatsReporterConfiguration(cfg *gatewayv1.Config, logger *zap.Logger) (t
 	var metricsHandler http.Handler
 	var scopeOpts tally.ScopeOptions
 
-	statsPrefix := "datalift"
+	statsPrefix := "admiral"
 	if cfg.Gateway.Stats.Prefix != "" {
 		statsPrefix = cfg.Gateway.Stats.Prefix
 	}

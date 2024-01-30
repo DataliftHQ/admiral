@@ -3,7 +3,7 @@ package endpointtest
 import (
 	"context"
 	"fmt"
-	"go.datalift.io/datalift/server/endpoint"
+	"go.datalift.io/admiral/server/endpoint"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"

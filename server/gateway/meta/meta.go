@@ -15,8 +15,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	auditv1 "go.datalift.io/datalift/common/api/audit/v1"
-	commonv1 "go.datalift.io/datalift/common/api/common/v1"
+	commonv1 "go.datalift.io/admiral/common/api/api/v1"
+	auditv1 "go.datalift.io/admiral/common/api/audit/v1"
 )
 
 var (
@@ -189,7 +189,7 @@ func HydratedPatternForProto(pb proto.Message) (string, error) {
 //
 // For example given the following proto pattern:
 //
-//	option (datalift.api.v1.id).patterns = {
+//	option (admiral.api.v1.id).patterns = {
 //		pattern : "{cluster}/{namespace}/{name}"
 //	};
 //

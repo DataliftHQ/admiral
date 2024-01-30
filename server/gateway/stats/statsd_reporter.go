@@ -9,7 +9,7 @@ import (
 	"github.com/uber-go/tally/v4"
 	tallystatsd "github.com/uber-go/tally/v4/statsd"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
 )
 
 func NewStatsdReporter(cfg *gatewayv1.Stats_StatsdReporter) (tally.StatsReporter, error) {

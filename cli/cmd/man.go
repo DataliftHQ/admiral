@@ -17,7 +17,7 @@ func newManCmd() *manCmd {
 	root := &manCmd{}
 	cmd := &cobra.Command{
 		Use:                   "man",
-		Short:                 "Generates Datalift's command line manpages",
+		Short:                 "Generates Admiral's command line manpages",
 		SilenceUsage:          true,
 		DisableFlagsInUseLine: true,
 		Hidden:                true,

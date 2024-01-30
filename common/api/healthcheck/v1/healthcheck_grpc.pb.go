@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	HealthcheckAPI_Healthcheck_FullMethodName = "/datalift.healthcheck.v1.HealthcheckAPI/Healthcheck"
+	HealthcheckAPI_Healthcheck_FullMethodName = "/admiral.healthcheck.v1.HealthcheckAPI/Healthcheck"
 )
 
 // HealthcheckAPIClient is the client API for HealthcheckAPI service.
@@ -94,7 +94,7 @@ func _HealthcheckAPI_Healthcheck_Handler(srv interface{}, ctx context.Context, d
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var HealthcheckAPI_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "datalift.healthcheck.v1.HealthcheckAPI",
+	ServiceName: "admiral.healthcheck.v1.HealthcheckAPI",
 	HandlerType: (*HealthcheckAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

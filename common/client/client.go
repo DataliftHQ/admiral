@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
-	httputil "go.datalift.io/datalift/common/util/http"
+	httputil "go.datalift.io/admiral/common/util/http"
 )
 
 type Options struct {
@@ -145,7 +145,7 @@ func NewClient(opts *Options) (Client, error) {
 	}
 
 	if opts.UserAgent == "" {
-		c.UserAgent = fmt.Sprintf("%s/%s", "datalift-client", "unknown")
+		c.UserAgent = fmt.Sprintf("%s/%s", "admiral-client", "unknown")
 	} else {
 		c.UserAgent = opts.UserAgent
 	}

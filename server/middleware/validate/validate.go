@@ -7,10 +7,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"go.datalift.io/datalift/server/middleware"
+	"go.datalift.io/admiral/server/middleware"
 )
 
-const Name = "datalift.middleware.validate"
+const Name = "admiral.middleware.validate"
 
 func New(cfg *anypb.Any, logger *zap.Logger, scope tally.Scope) (middleware.Middleware, error) {
 	return &mid{}, nil

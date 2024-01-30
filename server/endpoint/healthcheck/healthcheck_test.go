@@ -8,8 +8,8 @@ import (
 	"github.com/uber-go/tally/v4"
 	"go.uber.org/zap/zaptest"
 
-	healthcheckv1 "go.datalift.io/datalift/common/api/healthcheck/v1"
-	"go.datalift.io/datalift/server/endpoint/endpointtest"
+	healthcheckv1 "go.datalift.io/admiral/common/api/healthcheck/v1"
+	"go.datalift.io/admiral/server/endpoint/endpointtest"
 )
 
 func TestModule(t *testing.T) {
@@ -21,7 +21,7 @@ func TestModule(t *testing.T) {
 
 	r := endpointtest.NewRegisterChecker()
 	assert.NoError(t, m.Register(r))
-	assert.NoError(t, r.HasAPI("datalift.healthcheck.v1.HealthcheckAPI"))
+	assert.NoError(t, r.HasAPI("admiral.healthcheck.v1.HealthcheckAPI"))
 	assert.True(t, r.JSONRegistered())
 }
 

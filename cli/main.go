@@ -4,8 +4,8 @@ import (
 	_ "embed"
 	"os"
 
-	"go.datalift.io/datalift/cli/cmd"
-	vers "go.datalift.io/datalift/common/version"
+	"go.datalift.io/admiral/cli/cmd"
+	vers "go.datalift.io/admiral/common/version"
 )
 
 var (

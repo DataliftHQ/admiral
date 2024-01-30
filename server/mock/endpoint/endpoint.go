@@ -3,7 +3,7 @@ package endpointmock
 import (
 	"google.golang.org/grpc"
 
-	"go.datalift.io/datalift/server/endpoint"
+	"go.datalift.io/admiral/server/endpoint"
 )
 
 type MockRegistrar struct {

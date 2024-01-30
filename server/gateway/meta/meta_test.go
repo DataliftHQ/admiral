@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
-	commonv1 "go.datalift.io/datalift/common/api/common/v1"
-	"go.datalift.io/datalift/server/endpoint/healthcheck"
-	endpointmock "go.datalift.io/datalift/server/mock/endpoint"
+	commonv1 "go.datalift.io/admiral/common/api/api/v1"
+	"go.datalift.io/admiral/server/endpoint/healthcheck"
+	endpointmock "go.datalift.io/admiral/server/mock/endpoint"
 )
 
 func TestGetAction(t *testing.T) {
@@ -25,7 +25,7 @@ func TestGetAction(t *testing.T) {
 	err = GenerateGRPCMetadata(r.GRPCServer())
 	assert.NoError(t, err)
 
-	action := GetAction("/datalift.healthcheck.v1.HealthcheckAPI/Healthcheck")
+	action := GetAction("/admiral.healthcheck.v1.HealthcheckAPI/Healthcheck")
 	assert.Equal(t, commonv1.ActionType_READ, action)
 
 	action = GetAction("/grpc.health.v1.Health/Check")

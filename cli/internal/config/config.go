@@ -1,12 +1,13 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"sync"
+
+	"gopkg.in/yaml.v2"
 )
 
 var saveMutex sync.Mutex
@@ -55,16 +56,16 @@ func Save(file string, config Config) error {
 }
 
 func ConfigDir() (string, error) {
-	if configDir := os.Getenv("DATALIFT_CONFIG_DIR"); configDir != "" {
+	if configDir := os.Getenv("ADMIRAL_CONFIG_DIR"); configDir != "" {
 		return configDir, nil
 	}
 
 	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
-		return path.Join(xdgConfigHome, "datalift"), nil
+		return path.Join(xdgConfigHome, "admiral"), nil
 	}
 
 	if winConfigHome := os.Getenv("AppData"); winConfigHome != "" && runtime.GOOS == "windows" {
-		return path.Join(winConfigHome, "Datalift"), nil
+		return path.Join(winConfigHome, "Admiral"), nil
 	}
 
 	homeDir, err := os.UserHomeDir()
@@ -72,5 +73,5 @@ func ConfigDir() (string, error) {
 		return "", err
 	}
 
-	return path.Join(homeDir, ".config", "datalift"), nil
+	return path.Join(homeDir, ".config", "admiral"), nil
 }

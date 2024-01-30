@@ -3,19 +3,21 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	cobracompletefig "github.com/withfig/autocomplete-tools/integrations/cobra"
-	"go.datalift.io/datalift/cli/internal/common"
-	"go.datalift.io/datalift/cli/internal/config"
-	utillog "go.datalift.io/datalift/cli/internal/util/log"
-	"go.datalift.io/datalift/common/client"
-	"go.datalift.io/datalift/common/util/env"
-	"go.datalift.io/datalift/common/util/text"
-	"go.datalift.io/datalift/common/version"
 	"os"
 	"path"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	cobracompletefig "github.com/withfig/autocomplete-tools/integrations/cobra"
+	utillog "go.datalift.io/admiral/cli/internal/util/log"
+
+	"go.datalift.io/admiral/cli/internal/common"
+	"go.datalift.io/admiral/cli/internal/config"
+	"go.datalift.io/admiral/common/client"
+	"go.datalift.io/admiral/common/util/env"
+	"go.datalift.io/admiral/common/util/text"
+	"go.datalift.io/admiral/common/version"
 )
 
 func Execute(version version.Version, exit func(int), args []string) {
@@ -71,8 +73,8 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	}
 
 	cmd := &cobra.Command{
-		Use:           "datalift",
-		Short:         "Datalift - Platform Orchestrator",
+		Use:           "admiral",
+		Short:         "Admiral - Platform Orchestrator",
 		Version:       version.String(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -92,7 +94,7 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	cmd.SetVersionTemplate("{{.Version}}")
 
 	// general options
-	cmd.PersistentFlags().BoolP("help", "h", false, "help for datalift cli")
+	cmd.PersistentFlags().BoolP("help", "h", false, "help for admiral cli")
 	cmd.PersistentFlags().StringVar(&logFormat, "logformat", "text", "Set the logging format. One of: text|json")
 	cmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "Set the logging level. One of: debug|info|warn|error")
 
@@ -102,7 +104,7 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 		log.WithError(err).Fatal("failed to get default config path")
 	}
 	cmd.PersistentFlags().StringVar(&root.configPath, "config-dir", defaultConfigPath, "path to config directory")
-	cmd.PersistentFlags().StringVar(&root.configFilePath, "config", path.Join(root.configPath, "datalift.yaml"), "path to config file")
+	cmd.PersistentFlags().StringVar(&root.configFilePath, "config", path.Join(root.configPath, "admiral.yaml"), "path to config file")
 
 	//config is optional
 
@@ -129,7 +131,7 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	// client options
 	cmd.PersistentFlags().StringVar(&clientOpts.ClientCertFile, "client-crt", "", "client certificate file")
 	cmd.PersistentFlags().StringVar(&clientOpts.ClientCertKeyFile, "client-crt-key", "", "client certificate key file")
-	cmd.PersistentFlags().IntVar(&clientOpts.HttpRetryMax, "http-retry-max", 0, "maximum number of retries to establish http connection to datalift server")
+	cmd.PersistentFlags().IntVar(&clientOpts.HttpRetryMax, "http-retry-max", 0, "maximum number of retries to establish http connection to server")
 	cmd.PersistentFlags().StringSliceVarP(&clientOpts.Headers, "header", "H", []string{}, "Sets additional header to all requests. (Can be repeated multiple times to add multiple headers, also supports comma separated headers)")
 
 	// oauth2/oidc options

@@ -1,11 +1,12 @@
 syntax = "proto3";
 
-package datalift.config.gateway.v1;
+package admiral.config.gateway.v1;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/wrappers.proto";
 import "validate/validate.proto";
+
 import "config/middleware/accesslog/v1/accesslog.proto";
 
 message Config {
@@ -70,7 +71,7 @@ message Stats {
   // Collect go runtime stats, this is disabled by default.
   GoRuntimeStats go_runtime_stats = 4;
 
-  // the prefix for the stats. If none specified, the default is "datalift"
+  // the prefix for the stats. If none specified, the default is "admiral"
   string prefix = 6;
 }
 
@@ -107,7 +108,7 @@ message GatewayOptions {
 
   bool enable_pprof = 8;
 
-  datalift.config.middleware.accesslog.v1.Config accesslog = 9;
+  admiral.config.middleware.accesslog.v1.Config accesslog = 9;
 
   // Maximum allowed size of a gRPC response (before transcoding to JSON). Defaults to 4MB (i.e. 4194304 bytes).
   uint32 max_response_size_bytes = 10;

@@ -1,4 +1,4 @@
-project_name: datalift
+project_name: admiral
 
 env:
   - DOCKER_CLI_EXPERIMENTAL=enabled
@@ -14,11 +14,11 @@ snapshot:
 report_sizes: true
 
 builds:
-  - id: datalift-cli
-    binary: datalift
+  - id: admiral-cli
+    binary: admiral
     dir: cli
     mod_timestamp: &build-timestamp '{{ .CommitTimestamp }}'
-    flags: &build-flags |
+    flags: |
       -v
       -trimpath
     ldflags: &build-ldflags |
@@ -28,7 +28,7 @@ builds:
       -X main.version={{ .Version }}
       -X main.commit={{ .FullCommit }}
       -X main.date={{ .CommitDate }}
-      -X main.builtBy=datalift
+      -X main.builtBy=Datalift
     goos:
       - linux
       - darwin
@@ -50,15 +50,18 @@ builds:
       - goos: windows
         goarch: arm64
 
-  - id: datalift-server
-    binary: datalift-server
+  - id: admiral-server
+    binary: admiral-server
     dir: server
     hooks:
       pre:
         - cmd: go -C server run cmd/assets/generate.go ../ui/build
           output: true
     mod_timestamp: *build-timestamp
-    flags: *build-flags
+    flags: |
+      -v
+      -trimpath
+      -tags withAssets
     ldflags: *build-ldflags
     goos:
       - linux
@@ -143,28 +146,28 @@ archives:
         dst: config.yaml
 
 brews:
-  - name: datalift
+  - name: admiral-cli
     folder: Formula
     goarm: "7"
-    homepage: &website https://datalift.io/
-    description: Datalift CLI utility
+    homepage: &website https://admiral.io/
+    description: Admiral CLI utility
     license: Apache-2.0
     commit_author:
       name: release-bot
       email: release-bot@datalift.io
     test: |
-      system "#{bin}/datalift --version"
+      system "#{bin}/admiral --version"
     install: |-
-      bin.install "datalift"
-      bin.install_symlink "datalift" => "dl"
-      bash_completion.install "completions/datalift.bash" => "datalift"
-      zsh_completion.install "completions/datalift.zsh" => "_datalift"
-      fish_completion.install "completions/datalift.fish"
-      man1.install "manpages/datalift.1.gz"
+      bin.install "admiral"
+      bin.install_symlink "admiral" => "adm"
+      bash_completion.install "completions/admiral.bash" => "admiral"
+      zsh_completion.install "completions/admiral.zsh" => "_admiral"
+      fish_completion.install "completions/admiral.fish"
+      man1.install "manpages/admiral.1.gz"
     repository:
       owner: DataliftHQ
       name: homebrew-tap
-    caveats: "❤ Thanks for installing the Datalift!"
+    caveats: "❤ Thanks for installing the Admiral!"
 
 nfpms:
   - file_name_template: >-
@@ -179,24 +182,24 @@ nfpms:
     bindir: /usr/bin
     section: utils
     contents:
-      - src: ./cli/completions/datalift.bash
-        dst: /usr/share/bash-completion/completions/datalift
+      - src: ./cli/completions/admiral.bash
+        dst: /usr/share/bash-completion/completions/admiral
         file_info:
           mode: 0644
-      - src: ./cli/completions/datalift.fish
-        dst: /usr/share/fish/vendor_completions.d/datalift.fish
+      - src: ./cli/completions/admiral.fish
+        dst: /usr/share/fish/vendor_completions.d/admiral.fish
         file_info:
           mode: 0644
-      - src: ./cli/completions/datalift.zsh
-        dst: /usr/share/zsh/vendor-completions/_datalift
+      - src: ./cli/completions/admiral.zsh
+        dst: /usr/share/zsh/vendor-completions/_admiral
         file_info:
           mode: 0644
-      - src: ./cli/manpages/datalift.1.gz
-        dst: /usr/share/man/man1/datalift.1.gz
+      - src: ./cli/manpages/admiral.1.gz
+        dst: /usr/share/man/man1/admiral.1.gz
         file_info:
           mode: 0644
       - src: ./LICENSE
-        dst: /usr/share/doc/datalift/copyright
+        dst: /usr/share/doc/admiral/copyright
         file_info:
           mode: 0644
     formats:
@@ -210,7 +213,7 @@ nfpms:
         - changelog-file-missing-in-native-package
 
 scoops:
-  - name: datalift-cli
+  - name: admiral-cli
     repository:
       owner: DataliftHQ
       name: scoop-bucket
@@ -223,20 +226,20 @@ scoops:
       email: release-bot@datalift.io
 
 dockers:
-  # Datalift CLI
+  # Admiral CLI
   - image_templates:
-      - "datalifthq/datalift-cli:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-amd64"
+      - "datalifthq/admiral-cli:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}-amd64"
     dockerfile: cli/Dockerfile
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/admiral/master/README.md"
       - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
       - "--label=io.artifacthub.package.license=Apache-2.0"
       - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name=datalift-cli"
+      - "--label=org.opencontainers.image.name=admiral-cli"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
@@ -244,18 +247,18 @@ dockers:
     extra_files:
       - cli/scripts/entrypoint.sh
   - image_templates:
-      - "datalifthq/datalift-cli:v{{ .Version }}-arm64"
-      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-arm64"
+      - "datalifthq/admiral-cli:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}-arm64"
     dockerfile: cli/Dockerfile
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/admiral/master/README.md"
       - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
       - "--label=io.artifacthub.package.license=Apache-2.0"
       - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name=datalift-cli"
+      - "--label=org.opencontainers.image.name=admiral-cli"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
@@ -263,20 +266,20 @@ dockers:
     extra_files:
       - cli/scripts/entrypoint.sh
 
-  # Datalift Server
+  # Admiral Server
   - image_templates:
-      - "datalifthq/datalift-server:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-amd64"
+      - "datalifthq/admiral-server:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/admiral-server:v{{ .Version }}-amd64"
     dockerfile: server/Dockerfile
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/admiral/master/README.md"
       - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
       - "--label=io.artifacthub.package.license=Apache-2.0"
       - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name=datalift-server"
+      - "--label=org.opencontainers.image.name=admiral-server"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
@@ -284,18 +287,18 @@ dockers:
     extra_files:
       - server/config.yaml
   - image_templates:
-      - "datalifthq/datalift-server:v{{ .Version }}-arm64"
-      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-arm64"
+      - "datalifthq/admiral-server:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/admiral-server:v{{ .Version }}-arm64"
     dockerfile: server/Dockerfile
     use: buildx
     build_flag_templates:
       - "--pull"
-      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/datalift/master/README.md"
+      - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/DataliftHQ/admiral/master/README.md"
       - '--label=io.artifacthub.package.maintainers=[{"name":"Datalift","email":"support@datalift.io"}]'
       - "--label=io.artifacthub.package.license=Apache-2.0"
       - "--label=org.opencontainers.image.description=Platform Orchestrator designed to empower developers in accelerating the development, deployment, and seamless management of their applications."
       - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name=datalift-server"
+      - "--label=org.opencontainers.image.name=admiral-server"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
@@ -304,44 +307,44 @@ dockers:
       - server/config.yaml
 
 docker_manifests:
-  # Datalift CLI
-  - name_template: "datalifthq/datalift-cli:v{{ .Version }}"
+  # Admiral CLI
+  - name_template: "datalifthq/admiral-cli:v{{ .Version }}"
     image_templates:
-      - "datalifthq/datalift-cli:v{{ .Version }}-amd64"
-      - "datalifthq/datalift-cli:v{{ .Version }}-arm64"
-  - name_template: "datalifthq/datalift-cli:latest"
+      - "datalifthq/admiral-cli:v{{ .Version }}-amd64"
+      - "datalifthq/admiral-cli:v{{ .Version }}-arm64"
+  - name_template: "datalifthq/admiral-cli:latest"
     image_templates:
-      - "datalifthq/datalift-cli:v{{ .Version }}-amd64"
-      - "datalifthq/datalift-cli:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}"
+      - "datalifthq/admiral-cli:v{{ .Version }}-amd64"
+      - "datalifthq/admiral-cli:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}"
     image_templates:
-      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/datalifthq/datalift-cli:latest"
+      - "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/admiral-cli:latest"
     image_templates:
-      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift-cli:v{{ .Version }}-arm64"
-  # Datalift Server
-  - name_template: "datalifthq/datalift-server:v{{ .Version }}"
+      - "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/admiral-cli:v{{ .Version }}-arm64"
+  # Admiral Server
+  - name_template: "datalifthq/admiral-server:v{{ .Version }}"
     image_templates:
-      - "datalifthq/datalift-server:v{{ .Version }}-amd64"
-      - "datalifthq/datalift-server:v{{ .Version }}-arm64"
-  - name_template: "datalifthq/datalift-server:latest"
+      - "datalifthq/admiral-server:v{{ .Version }}-amd64"
+      - "datalifthq/admiral-server:v{{ .Version }}-arm64"
+  - name_template: "datalifthq/admiral-server:latest"
     image_templates:
-      - "datalifthq/datalift-server:v{{ .Version }}-amd64"
-      - "datalifthq/datalift-server:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/datalifthq/datalift-server:v{{ .Version }}"
+      - "datalifthq/admiral-server:v{{ .Version }}-amd64"
+      - "datalifthq/admiral-server:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/admiral-server:v{{ .Version }}"
     image_templates:
-      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-arm64"
-  - name_template: "ghcr.io/datalifthq/datalift-server:latest"
+      - "ghcr.io/datalifthq/admiral-server:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/admiral-server:v{{ .Version }}-arm64"
+  - name_template: "ghcr.io/datalifthq/admiral-server:latest"
     image_templates:
-      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-amd64"
-      - "ghcr.io/datalifthq/datalift-server:v{{ .Version }}-arm64"
+      - "ghcr.io/datalifthq/admiral-server:v{{ .Version }}-amd64"
+      - "ghcr.io/datalifthq/admiral-server:v{{ .Version }}-arm64"
 
 release:
   footer: |
-    **Full Changelog**: https://github.com/DataliftHQ/datalift/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/DataliftHQ/admiral/compare/{{ .PreviousTag }}...{{ .Tag }}
 
     ## Helping out
 

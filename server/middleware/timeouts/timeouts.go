@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
-	"go.datalift.io/datalift/server/middleware"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
+	"go.datalift.io/admiral/server/middleware"
 )
 
 const (

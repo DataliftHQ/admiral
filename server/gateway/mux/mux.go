@@ -22,7 +22,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 	xForwardedHost = "X-Forwarded-Host"
 )
 
-var apiPattern = regexp.MustCompile(`^/v\d+/`)
+var apiPattern = regexp.MustCompile(`^/api/v\d+/`)
 
 type assetHandler struct {
 	assetCfg *gatewayv1.Assets
@@ -52,7 +52,7 @@ func copyHTTPResponse(resp *http.Response, w http.ResponseWriter) {
 }
 
 func (a *assetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if apiPattern.MatchString(r.URL.Path) || r.URL.Path == "/healthcheck" {
+	if apiPattern.MatchString(r.URL.Path) || r.URL.Path == "/healthz" {
 		a.next.ServeHTTP(w, r)
 		return
 	}
@@ -82,7 +82,7 @@ func newCustomResponseForwarder(secureCookies bool) func(context.Context, http.R
 			cookie := &http.Cookie{
 				Name:     "refreshToken",
 				Value:    cookies[0],
-				Path:     "/v1/authn/login",
+				Path:     "/api/v1/authn/login",
 				HttpOnly: true, // Client cannot access refresh token, it is sent by browser only if login is attempted.
 				Secure:   secureCookies,
 			}
@@ -125,7 +125,7 @@ func customHeaderMatcher(key string) (string, bool) {
 func customErrorHandler(ctx context.Context, mux *runtime.ServeMux, m runtime.Marshaler, w http.ResponseWriter, req *http.Request, err error) {
 	if isBrowser(req.Header) { // Redirect if it's the browser (non-XHR).
 		if s, ok := status.FromError(err); ok && s.Code() == codes.Unauthenticated {
-			redirectPath := fmt.Sprintf("/v1/authn/login?redirect_url=%s", url.QueryEscape(req.RequestURI))
+			redirectPath := fmt.Sprintf("/api/v1/authn/login?redirect_url=%s", url.QueryEscape(req.RequestURI))
 			http.Redirect(w, req, redirectPath, http.StatusFound)
 			return
 		}

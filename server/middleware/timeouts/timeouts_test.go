@@ -16,8 +16,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	healthcheckv1 "go.datalift.io/datalift/common/api/healthcheck/v1"
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
+	healthcheckv1 "go.datalift.io/admiral/common/api/healthcheck/v1"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
 )
 
 func TestNew(t *testing.T) {

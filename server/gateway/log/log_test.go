@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	healthcheckv1 "go.datalift.io/datalift/common/api/healthcheck/v1"
+	healthcheckv1 "go.datalift.io/admiral/common/api/healthcheck/v1"
 )
 
 func TestProtoField(t *testing.T) {
@@ -36,7 +36,7 @@ func TestProtoField(t *testing.T) {
 
 	o := make(map[string]interface{})
 	assert.NoError(t, json.Unmarshal(b.Bytes(), &o))
-	assert.Contains(t, b.String(), `{"@type":"type.googleapis.com/datalift.healthcheck.v1.HealthcheckRequest"}`)
+	assert.Contains(t, b.String(), `{"@type":"type.googleapis.com/admiral.healthcheck.v1.HealthcheckRequest"}`)
 }
 
 func TestNamedErrorField(t *testing.T) {

@@ -14,8 +14,8 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	gatewayv1 "go.datalift.io/datalift/server/config/gateway/v1"
-	"go.datalift.io/datalift/server/middleware/timeouts"
+	gatewayv1 "go.datalift.io/admiral/server/config/gateway/v1"
+	"go.datalift.io/admiral/server/middleware/timeouts"
 )
 
 func TestEnsureUnique(t *testing.T) {

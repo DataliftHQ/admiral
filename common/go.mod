@@ -1,4 +1,4 @@
-module go.datalift.io/datalift/common
+module go.datalift.io/admiral/common
 
 go 1.21.6
 

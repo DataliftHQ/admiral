@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	tls_util "go.datalift.io/datalift/common/util/tls"
+	tls_util "go.datalift.io/admiral/common/util/tls"
 )
 
 func (c *client) tlsConfig() (*tls.Config, error) {

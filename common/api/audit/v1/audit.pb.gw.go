@@ -97,7 +97,7 @@ func RegisterAuditAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/datalift.audit.v1.AuditAPI/GetEvents", runtime.WithHTTPPathPattern("/v1/audit/getEvents"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.audit.v1.AuditAPI/GetEvents", runtime.WithHTTPPathPattern("/v1/audit/getEvents"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -122,7 +122,7 @@ func RegisterAuditAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, s
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/datalift.audit.v1.AuditAPI/GetEvent", runtime.WithHTTPPathPattern("/v1/audit/getEvent"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/admiral.audit.v1.AuditAPI/GetEvent", runtime.WithHTTPPathPattern("/v1/audit/getEvent"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -186,7 +186,7 @@ func RegisterAuditAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/datalift.audit.v1.AuditAPI/GetEvents", runtime.WithHTTPPathPattern("/v1/audit/getEvents"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/admiral.audit.v1.AuditAPI/GetEvents", runtime.WithHTTPPathPattern("/v1/audit/getEvents"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -208,7 +208,7 @@ func RegisterAuditAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, c
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/datalift.audit.v1.AuditAPI/GetEvent", runtime.WithHTTPPathPattern("/v1/audit/getEvent"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/admiral.audit.v1.AuditAPI/GetEvent", runtime.WithHTTPPathPattern("/v1/audit/getEvent"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

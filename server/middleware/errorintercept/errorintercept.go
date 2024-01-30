@@ -8,10 +8,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"go.datalift.io/datalift/server/middleware"
+	"go.datalift.io/admiral/server/middleware"
 )
 
-const Name = "datalift.middleware.errorintercept"
+const Name = "admiral.middleware.errorintercept"
 
 type Interceptor interface {
 	InterceptError(error) error
