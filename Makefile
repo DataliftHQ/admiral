@@ -3,9 +3,6 @@ SHELL:=/usr/bin/env bash
 
 MAKEFLAGS += --no-print-directory
 
-DOCS_DEPLOY_USE_SSH ?= true
-DOCS_DEPLOY_GIT_USER ?= git
-
 VERSION ?= 0.0.0-dev
 
 PROJECT_ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -15,16 +12,16 @@ help:
 	@grep -E '^\.PHONY: [a-zA-Z_-]+ .*?# .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = "(: |#)"}; {printf "%-30s %s\n", $$2, $$3}'
 
 .PHONY: all # Generate proto, cli, ui, and server assets.
-all: proto server-with-assets cli ui
+all: proto server-with-assets cli web
 
 .PHONY: lint # Lint all of the code.
-lint: proto-lint server-lint cli-lint ui-lint
+lint: proto-lint server-lint cli-lint web-lint
 
 .PHONY: lint-fix # Lint and fix all of the code.
-lint-fix: server-lint-fix cli-lint-fix ui-lint-fix
+lint-fix: server-lint-fix cli-lint-fix web-lint-fix
 
 .PHONY: verify # Verify all of the code.
-verify: proto-verify server-verify cli-verify ui-verify
+verify: proto-verify server-verify cli-verify web-verify
 
 .PHONY: proto # Generate proto assets.
 proto:
@@ -48,16 +45,21 @@ server:
 	cd server && CGO_ENABLED=0 go build -o ../build/admiral-server -ldflags "-s -w -X main.version=$(VERSION)"
 
 .PHONY: server-with-assets # Build the server with ui assets.
-server-with-assets: ui
-	cd server && go run cmd/assets/generate.go ../ui/build && CGO_ENABLED=0 go build -tags withAssets -o ../build/admiral-server -ldflags="-X main.version=$(VERSION)"
+server-with-assets: web
+	cd server && go run cmd/assets/generate.go ../web/build && CGO_ENABLED=0 go build -tags withAssets -o ../build/admiral-server -ldflags="-X main.version=$(VERSION)"
+
+.PHONY: server-dev # Start the server in development mode.
+server-dev:
+	tools/air.sh
 
 .PHONY: server-lint # Lint the server code.
 server-lint:
-	cd server && tools/golangci-lint.sh run
+	tools/golangci-lint.sh run
 
 .PHONY: server-lint-fix # Lint and fix the server code.
 server-lint-fix:
-	cd server && tools/golangci-lint.sh run --fix && go mod tidy
+	tools/golangci-lint.sh run --fix
+	cd server && go mod tidy
 
 .PHONY: server-verify # Verify go modules' requirements files are clean.
 server-verify:
@@ -81,29 +83,29 @@ cli-verify:
 	cd cli && go mod tidy
 	tools/ensure-no-diff.sh cli
 
-.PHONY: ui # Build the UI.
-ui: npm-install
-	npm --prefix ui run build
+.PHONY: npm-install # Install web dependencies.
+npm-install:
+	npm --prefix web ci
 
-.PHONY: ui-lint # Lint the ui code.
-ui-lint:
-	npm --prefix ui run lint
+.PHONY: web # Build the web code.
+web: npm-install
+	npm --prefix web run build
 
-.PHONY: ui-lint-fix # Lint and fix the ui code.
-ui-lint-fix:
-	npm --prefix ui run lint:fix
+.PHONY: web-lint # Lint the web code.
+web-lint:
+	npm --prefix web run lint
 
-.PHONY: ui-verify # Verify ui packages are sorted.
-ui-verify:
-	npm --prefix ui run lint:packages
+.PHONY: web-lint-fix # Lint and fix the web code.
+web-lint-fix:
+	npm --prefix web run lint:fix
+
+.PHONY: web-verify # Verify web packages are sorted.
+web-verify:
+	npm --prefix web run lint:packages
 
 .PHONY: dev # Start the start in development mode.
 dev:
-	$(MAKE) -j2 server-dev ui-dev
-
-.PHONY: npm-install # Install ui dependencies.
-npm-install:
-	npm --prefix ui ci
+	$(MAKE) -j2 server-dev web-dev
 
 .PHONY: cli-completions # Generate cli shell completion scripts.
 cli-completions:
@@ -119,5 +121,5 @@ clean:
 	@rm -rf dist
 	@rm -rf cli/completions
 	@rm -rf cli/manpages
-	@rm -rf ui/build
-	@rm -rf ui/node_modules
+	@rm -rf web/build
+	@rm -rf web/node_modules
