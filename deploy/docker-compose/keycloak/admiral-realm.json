@@ -334,7 +334,7 @@
         "containerId" : "b9540d98-9f46-4145-89f9-e6380da687ab",
         "attributes" : { }
       } ],
-      "admiral-web" : [ ]
+      "admiral" : [ ]
     }
   },
   "groups" : [ ],
@@ -522,8 +522,8 @@
     "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "7db9d54c-466d-40d9-a5e1-3939a3ceb4a7",
-    "clientId" : "admiral-web",
-    "name" : "admiral-web",
+    "clientId" : "admiral",
+    "name" : "admiral",
     "description" : "",
     "rootUrl" : "http://localhost:8080",
     "adminUrl" : "http://localhost:8080",
