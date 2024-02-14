@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package admiral.session.v1;
+
+import "google/api/annotations.proto";
+
+import "api/v1/annotations.proto";
+
+service SessionAPI {
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/settings"
+    };
+    option (admiral.api.v1.action).type = READ;
+  }
+}
+
+message GetSessionRequest {
+}
+
+message GetSessionResponse {
+  bool loggedIn = 1;
+  string username = 2;
+  string iss = 3;
+  repeated string groups = 4;
+}

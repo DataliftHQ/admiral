@@ -45,10 +45,10 @@ func (a *settingsAPI) Settings(context.Context, *settingsv1.SettingsRequest) (*s
 		Url: "http://localhost:8080",
 		OidcConfig: &settingsv1.OIDCConfig{
 			Name:        "admiral",
-			Issuer:      "http://localhost:8080",
+			Issuer:      "http://localhost:9090/realms/admiral",
 			ClientId:    "admiral",
 			CliClientId: "admiral-cli",
-			Scopes:      []string{"openid", "profile", "email", "groups"},
+			Scopes:      []string{"openid", "offline_access", "profile", "email"},
 		},
 	}, nil
 }
