@@ -34,7 +34,7 @@ updates:
       include: "scope"
 
   - package-ecosystem: "npm"
-    directory: "/ui/"
+    directory: "/web/"
     schedule:
       interval: "daily"
       time: "08:00"

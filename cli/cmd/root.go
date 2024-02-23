@@ -3,8 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"go.datalift.io/admiral/cli/cmd/account"
 	"os"
-	"path"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -59,6 +59,7 @@ type rootCmd struct {
 	cmd  *cobra.Command
 	exit func(int)
 
+	accessToken string
 	// config
 	configPath     string
 	configFilePath string
@@ -104,26 +105,12 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 		log.WithError(err).Fatal("failed to get default config path")
 	}
 	cmd.PersistentFlags().StringVar(&root.configPath, "config-dir", defaultConfigPath, "path to config directory")
-	cmd.PersistentFlags().StringVar(&root.configFilePath, "config", path.Join(root.configPath, "admiral.yaml"), "path to config file")
 
-	//config is optional
-
-	// load config file to provide defaults for flags
-	cfg, err := config.Load(root.configFilePath)
-	if err != nil {
-		cfg = config.Config{
-			Version:       1,
-			ServerAddress: common.DefaultServerAddress,
-			OAuth2: config.OAuth2{
-				Issuer:   common.DefaultOAuth2Issuer,
-				ClientId: common.DefaultOAuth2ClientId,
-				Scopes:   common.DefaultOAuth2Scopes,
-			},
-		}
-	}
+	// auth options
+	cmd.PersistentFlags().StringVar(&root.accessToken, "access-token", "", "access token")
 
 	// server options
-	cmd.PersistentFlags().StringVarP(&clientOpts.ServerAddress, "server", "s", env.StringFromEnv(common.EnvServerAddress, cfg.ServerAddress), "host:port of the api server")
+	cmd.PersistentFlags().StringVarP(&clientOpts.ServerAddress, "server", "s", env.StringFromEnv(common.EnvServerAddress, ""), "host:port of the api server")
 	cmd.PersistentFlags().BoolVar(&clientOpts.PlainText, "plaintext", false, "disable tls")
 	cmd.PersistentFlags().BoolVarP(&clientOpts.Insecure, "insecure", "i", false, "skip server certificate and domain verification")
 	cmd.PersistentFlags().StringVar(&clientOpts.CertFile, "server-crt", "", "server certificate file")
@@ -134,15 +121,8 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	cmd.PersistentFlags().IntVar(&clientOpts.HttpRetryMax, "http-retry-max", 0, "maximum number of retries to establish http connection to server")
 	cmd.PersistentFlags().StringSliceVarP(&clientOpts.Headers, "header", "H", []string{}, "Sets additional header to all requests. (Can be repeated multiple times to add multiple headers, also supports comma separated headers)")
 
-	// oauth2/oidc options
-	//cmd.PersistentFlags().StringVar(&root.accessToken, "access-token", "", "access token")
-	cmd.PersistentFlags().StringVar(&clientOpts.Issuer, "issuer", env.StringFromEnv(common.EnvOAuth2Issuer, cfg.OAuth2.Issuer), "url of the openid provider")
-	//_ = cmd.PersistentFlags().MarkHidden("issuer")
-	cmd.PersistentFlags().StringVar(&clientOpts.ClientId, "client-id", env.StringFromEnv(common.EnvOAuth2ClientId, cfg.OAuth2.ClientId), "oauth2 client id for authentication")
-	//_ = cmd.PersistentFlags().MarkHidden("client-id")
-	cmd.PersistentFlags().StringSliceVar(&clientOpts.Scopes, "scopes", env.StringsFromEnv(common.EnvOAuth2Scopes, cfg.OAuth2.Scopes, ","), "comma-separated list of oauth2 scopes for access control")
-
 	cmd.AddCommand(
+		account.NewAccountCmd(&clientOpts).Cmd,
 		newManCmd().cmd,
 		cobracompletefig.CreateCompletionSpecCommand(),
 	)

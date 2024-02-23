@@ -143,7 +143,7 @@ func (v Version) String() string {
 	return b.String()
 }
 
-func (v *Version) JSONString() (string, error) {
+func (v Version) JSONString() (string, error) {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return "", err

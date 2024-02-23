@@ -1,13 +1,41 @@
 package main
 
 import (
-	"go.datalift.io/admiral/server/cmd/assets"
-	"go.datalift.io/admiral/server/gateway"
+	vers "go.datalift.io/admiral/common/version"
+	"go.datalift.io/admiral/server/cmd/server"
+	"os"
+)
+
+var (
+	version = ""
+	commit  = ""
+	date    = ""
+	builtBy = ""
 )
 
 func main() {
-	flags := gateway.ParseFlags()
-	components := gateway.CoreComponentFactory
+	server.Execute(
+		buildVersion(version, commit, date, builtBy),
+		os.Exit,
+		os.Args[1:],
+	)
+}
 
-	gateway.Run(flags, components, assets.VirtualFS)
+func buildVersion(version, commit, date, builtBy string) vers.Version {
+	return vers.GetVersion(
+		func(v *vers.Version) {
+			if commit != "" {
+				v.GitCommit = commit
+			}
+			if date != "" {
+				v.BuildDate = date
+			}
+			if version != "" {
+				v.Version = version
+			}
+			if builtBy != "" {
+				v.BuiltBy = builtBy
+			}
+		},
+	)
 }

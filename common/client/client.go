@@ -5,17 +5,40 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
+	"math"
 	"net"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 
+	sessionv1 "go.datalift.io/admiral/common/api/session/v1"
+	settingsv1 "go.datalift.io/admiral/common/api/settings/v1"
+	"go.datalift.io/admiral/common/util/env"
+	grpcutil "go.datalift.io/admiral/common/util/grpc"
 	httputil "go.datalift.io/admiral/common/util/http"
+	ioutil "go.datalift.io/admiral/common/util/io"
+	oidcutil "go.datalift.io/admiral/common/util/oidc"
+)
+
+const (
+	MetaDataTokenKey        = "token"
+	EnvAdmiralServer        = "ADMIRAL_SERVER"
+	EnvAdmiralAccessToken   = "ADMIRAL_ACCESS_TOKEN"
+	EnvAdmiralgRPCMaxSizeMB = "ADMIRAL_GRPC_MAX_SIZE_MB"
+)
+
+var (
+	MaxGRPCMessageSize = env.ParseNumFromEnv(EnvAdmiralgRPCMaxSizeMB, 200, 0, math.MaxInt32) * 1024 * 1024
 )
 
 type Options struct {
@@ -43,10 +66,10 @@ type Client interface {
 	HTTPClient() (*http.Client, error)
 	OIDCConfig(context.Context) (*oauth2.Config, *oidc.Provider, error)
 
-	//NewUserClient() (io.Closer, usergrpc.UserAPIClient, error)
-	//NewUserClientOrDie() (io.Closer, usergrpc.UserAPIClient)
-	//NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error)
-	//NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient)
+	NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, error)
+	NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient)
+	NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error)
+	NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient)
 }
 
 type client struct {
@@ -65,6 +88,7 @@ func (c *client) ClientOptions() Options {
 	}
 }
 
+// fix
 func NewClient(opts *Options) (Client, error) {
 	var c client
 
@@ -160,11 +184,21 @@ func NewClient(opts *Options) (Client, error) {
 	return &c, nil
 }
 
+func NewClientOrDie(opts *Options) Client {
+	client, err := NewClient(opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return client
+}
+
+// fix
 func (c *client) refreshAccessToken() error {
 
 	return nil
 }
 
+// fix
 func (c *client) redeemRefreshToken(t *oauth2.Token) (*oauth2.Token, error) {
 	httpClient, err := c.HTTPClient()
 	if err != nil {
@@ -184,14 +218,6 @@ func (c *client) redeemRefreshToken(t *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	return token, nil
-}
-
-func NewClientOrDie(opts *Options) Client {
-	client, err := NewClient(opts)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return client
 }
 
 func (c *client) HTTPClient() (*http.Client, error) {
@@ -226,20 +252,140 @@ func (c *client) HTTPClient() (*http.Client, error) {
 	}, nil
 }
 
-func (c *client) OIDCConfig(ctx context.Context) (*oauth2.Config, *oidc.Provider, error) {
-	provider, err := oidc.NewProvider(ctx, c.Issuer)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to query provider %q: %v", c.Issuer, err)
+// fix
+func (c *client) OIDCConfig(ctx context.Context, set settingsv1.SettingsResponse) (*oauth2.Config, *oidc.Provider, error) {
+	var clientID string
+	var issuerURL string
+	var scopes []string
+
+	if set.OidcConfig != nil && set.OidcConfig.Issuer != "" {
+		if set.OidcConfig.CliClientId != "" {
+			clientID = set.OidcConfig.CliClientId
+		} else {
+			clientID = set.OidcConfig.ClientId
+		}
+		issuerURL = set.OidcConfig.Issuer
+		scopes = set.OidcConfig.Scopes
+	} else {
+		return nil, nil, fmt.Errorf("%s is not configured with SSO", c.ServerAddress)
 	}
 
-	endpoint := provider.Endpoint()
-	endpoint.AuthStyle = oauth2.AuthStyleInParams
+	provider, err := oidc.NewProvider(ctx, issuerURL)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to query provider %q: %v", issuerURL, err)
+	}
+
+	oidcConf, err := oidcutil.ParseConfig(provider)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to parse provider config: %v", err)
+	}
+
+	scopes = oidcutil.GetScopesOrDefault(scopes)
+	if oidcutil.OfflineAccess(oidcConf.ScopesSupported) {
+		scopes = append(scopes, oidc.ScopeOfflineAccess)
+	}
 
 	oauth2conf := oauth2.Config{
-		ClientID: c.ClientId,
-		Endpoint: endpoint,
-		Scopes:   c.Scopes,
+		ClientID: clientID,
+		Scopes:   scopes,
+		Endpoint: provider.Endpoint(),
 	}
 
 	return &oauth2conf, provider, nil
+}
+
+func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {
+	closers := make([]io.Closer, 0)
+	serverAddr := c.ServerAddress
+	network := "tcp"
+
+	var creds credentials.TransportCredentials
+	if !c.PlainText {
+		tlsConfig, err := c.tlsConfig()
+		if err != nil {
+			return nil, nil, err
+		}
+		creds = credentials.NewTLS(tlsConfig)
+	}
+
+	endpointCredentials := jwtCredentials{
+		Token: c.AccessToken,
+	}
+
+	retryOpts := []grpcretry.CallOption{
+		grpcretry.WithMax(3),
+		grpcretry.WithBackoff(grpcretry.BackoffLinear(1000 * time.Millisecond)),
+	}
+
+	var dialOpts []grpc.DialOption
+	dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(endpointCredentials))
+	dialOpts = append(dialOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(MaxGRPCMessageSize), grpc.MaxCallSendMsgSize(MaxGRPCMessageSize)))
+	dialOpts = append(dialOpts, grpc.WithStreamInterceptor(grpcretry.StreamClientInterceptor(retryOpts...)))
+	dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(grpcretry.UnaryClientInterceptor(retryOpts...)))
+	dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(grpcutil.OTELUnaryClientInterceptor()))
+	dialOpts = append(dialOpts, grpc.WithStreamInterceptor(grpcutil.OTELStreamClientInterceptor()))
+
+	ctx := context.Background()
+
+	headers, err := parseHeaders(c.Headers)
+	if err != nil {
+		return nil, nil, err
+	}
+	for k, vs := range headers {
+		for _, v := range vs {
+			ctx = metadata.AppendToOutgoingContext(ctx, k, v)
+		}
+	}
+
+	if c.UserAgent != "" {
+		dialOpts = append(dialOpts, grpc.WithUserAgent(c.UserAgent))
+	}
+
+	conn, e := grpcutil.BlockingDial(ctx, network, serverAddr, creds, dialOpts...)
+	closers = append(closers, conn)
+
+	return conn, ioutil.NewCloser(func() error {
+		var firstErr error
+		for i := range closers {
+			err := closers[i].Close()
+			if err != nil {
+				firstErr = err
+			}
+		}
+		return firstErr
+	}), e
+}
+
+func (c *client) NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, error) {
+	conn, closer, err := c.newConn()
+	if err != nil {
+		return nil, nil, err
+	}
+	sessionIf := sessionv1.NewSessionAPIClient(conn)
+	return closer, sessionIf, nil
+}
+
+func (c *client) NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient) {
+	conn, sessionIf, err := c.NewSessionClient()
+	if err != nil {
+		log.Fatalf("Failed to establish connection to %s: %v", c.ServerAddress, err)
+	}
+	return conn, sessionIf
+}
+
+func (c *client) NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error) {
+	conn, closer, err := c.newConn()
+	if err != nil {
+		return nil, nil, err
+	}
+	setIf := settingsv1.NewSettingsAPIClient(conn)
+	return closer, setIf, nil
+}
+
+func (c *client) NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient) {
+	conn, setIf, err := c.NewSettingsClient()
+	if err != nil {
+		log.Fatalf("Failed to establish connection to %s: %v", c.ServerAddress, err)
+	}
+	return conn, setIf
 }
