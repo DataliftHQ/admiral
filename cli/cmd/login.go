@@ -119,7 +119,10 @@ func NewLoginCmd(clientOpts *client.Options) *LoginCmd {
 				}
 
 				// save the token to the config file
-				err = admiral.UpsertToken(token)
+				config := admiral.ClientConfig()
+				config.Token = *token
+
+				err = config.Save()
 				if err != nil {
 					msg := "failure to save oauth token to configuration file."
 					http.Error(w, msg, http.StatusInternalServerError)

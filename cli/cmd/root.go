@@ -95,7 +95,7 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	cmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "Set the logging level. One of: debug|info|warn|error")
 
 	// config options
-	defaultConfigFile, err := config.DefaultFile()
+	defaultConfigFile, err := config.DefaultPath()
 	if err != nil {
 		log.WithError(err).Fatal("failed to get default config file")
 	}
