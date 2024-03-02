@@ -29,7 +29,7 @@ func newGetUserInfoCmd(clientOpts *client.Options) *userInfoCmd {
 	)
 	cmd := &cobra.Command{
 		Use:               "info",
-		Short:             "get user info",
+		Short:             "Get user info",
 		SilenceUsage:      true,
 		SilenceErrors:     true,
 		Args:              cobra.NoArgs,

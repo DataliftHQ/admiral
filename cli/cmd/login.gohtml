@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admiral - Command-line Interface</title>
+    <style>
+        :root {
+            --color-bg: #212124;
+            --color-secondary-bg: #3C4042;
+            --color-fg: #aaaaaa;
+        }
+        @media (prefers-color-scheme: light) {
+            :root {
+                --color-bg: #ffffff;
+                --color-secondary-bg: #f6f8fa;
+                --color-fg: #000000;
+            }
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            color: var(--color-fg);
+            background-color: var(--color-bg);
+            font-family: "Nunito Sans", "Helvetica Neue", sans-serif;
+        }
+        h1 {
+            color: #88b04b;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        p {
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        .card {
+            background:  var(--color-secondary-bg);
+            max-width: 550px;
+            padding: 64px 32px;
+            margin: 12px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .circle {
+            position: relative;
+            border-radius: 50%;
+            border: 6px solid #9abc66;
+            height: 120px;
+            width: 120px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .checkmark {
+            fill: #9abc66;
+            height: 64px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="circle">
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/>
+                </svg>
+            </div>
+            <h1>Authentication successful!</h1>
+            <p>Great job! You've successfully logged into your account. You're all set to go back to the CLI now. If this page doesn't close on its own, feel free to close it manually.</p>
+        </div>
+    </div>
+    <script>window.onload=function(){setTimeout(this.close, 5000)}</script>
+</body>
+</html>

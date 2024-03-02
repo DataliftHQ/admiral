@@ -6,6 +6,7 @@ replace go.datalift.io/admiral/common => ../common
 
 require (
 	github.com/bombsimon/logrusr/v2 v2.0.1
+	github.com/cli/browser v1.3.0
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/go-logr/logr v1.4.1
 	github.com/muesli/mango-cobra v1.2.0
@@ -15,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
 	go.datalift.io/admiral/common v0.0.0-00010101000000-000000000000
+	golang.org/x/oauth2 v0.16.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -23,6 +25,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 // indirect
@@ -39,7 +42,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/net v0.20.0 // indirect
-	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

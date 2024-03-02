@@ -3,16 +3,20 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"go.datalift.io/admiral/common/config"
 	"io"
 	"math"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/golang-jwt/jwt/v5"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
@@ -43,41 +47,44 @@ var (
 
 type Options struct {
 	ServerAddress     string
-	UserAgent         string
 	PlainText         bool
 	Insecure          bool
 	CertFile          string
 	ClientCertFile    string
 	ClientCertKeyFile string
+	AccessToken       string
+	ConfigFile        string
+	UserAgent         string
 	Headers           []string
 	HttpRetryMax      int
+}
 
-	AccessToken    string
-	RefreshToken   string
-	CredentialPath string
+type client struct {
+	ServerAddress string
+	PlainText     bool
+	Insecure      bool
+	CertPEMData   []byte
+	ClientCert    *tls.Certificate
+	AccessToken   string
+	RefreshToken  string
+	UserAgent     string
+	Headers       []string
 
-	Issuer   string
-	ClientId string
-	Scopes   []string
+	Config     config.Config
+	httpClient *http.Client
 }
 
 type Client interface {
 	ClientOptions() Options
 	HTTPClient() (*http.Client, error)
+
 	OIDCConfig(context.Context) (*oauth2.Config, *oidc.Provider, error)
+	UpsertToken(*oauth2.Token) error
 
 	NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, error)
 	NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient)
 	NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error)
 	NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient)
-}
-
-type client struct {
-	Options
-
-	httpClient  *http.Client
-	CertPEMData []byte
-	ClientCert  *tls.Certificate
 }
 
 func (c *client) ClientOptions() Options {
@@ -88,28 +95,50 @@ func (c *client) ClientOptions() Options {
 	}
 }
 
-// fix
 func NewClient(opts *Options) (Client, error) {
 	var c client
 
-	if opts.AccessToken == "" {
-
+	cfg, err := config.ReadFile(opts.ConfigFile)
+	if err != nil {
+		return nil, err
 	}
 
-	// get credential file
+	if cfg != nil {
+		c.ServerAddress = cfg.ServerAddress
+		if cfg.CACertificateAuthorityData != "" {
+			c.CertPEMData, err = base64.StdEncoding.DecodeString(cfg.CACertificateAuthorityData)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-	if opts.Issuer != "" {
-		c.Issuer = opts.Issuer
-	}
-	if c.Issuer == "" {
-		return nil, errors.New("openid provider url is unspecified")
+		if cfg.ClientCertificateData != "" && cfg.ClientCertificateKeyData != "" {
+			clientCertData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateData)
+			if err != nil {
+				return nil, err
+			}
+			clientCertKeyData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateKeyData)
+			if err != nil {
+				return nil, err
+			}
+			clientCert, err := tls.X509KeyPair(clientCertData, clientCertKeyData)
+			if err != nil {
+				return nil, err
+			}
+			c.ClientCert = &clientCert
+		} else if cfg.ClientCertificateData != "" || cfg.ClientCertificateKeyData != "" {
+			return nil, errors.New("ClientCertificateData and ClientCertificateKeyData must always be specified together")
+		}
+		c.PlainText = cfg.PlainText
+		c.Insecure = cfg.Insecure
+		c.AccessToken = cfg.Token.AccessToken
+		c.RefreshToken = cfg.Token.RefreshToken
 	}
 
-	if opts.ClientId != "" {
-		c.ClientId = opts.ClientId
-	}
-	if c.ClientId == "" {
-		return nil, errors.New("oauth client id is unspecified")
+	if opts.UserAgent == "" {
+		c.UserAgent = fmt.Sprintf("%s/%s", "admiral-client", "unknown")
+	} else {
+		c.UserAgent = opts.UserAgent
 	}
 
 	if opts.ServerAddress != "" {
@@ -117,6 +146,12 @@ func NewClient(opts *Options) (Client, error) {
 	}
 	if c.ServerAddress == "" {
 		return nil, errors.New("server address is unspecified")
+	}
+
+	// Override auth-token if specified in env variable or CLI flag
+	c.AccessToken = env.StringFromEnv(EnvAdmiralAccessToken, c.AccessToken)
+	if opts.AccessToken != "" {
+		c.AccessToken = strings.TrimSpace(opts.AccessToken)
 	}
 
 	if opts.CertFile != "" {
@@ -162,21 +197,11 @@ func NewClient(opts *Options) (Client, error) {
 		}
 	}
 
-	if opts.Scopes == nil || len(opts.Scopes) == 0 {
-		c.Scopes = []string{oidc.ScopeOpenID}
-	} else {
-		c.Scopes = opts.Scopes
-	}
-
-	if opts.UserAgent == "" {
-		c.UserAgent = fmt.Sprintf("%s/%s", "admiral-client", "unknown")
-	} else {
-		c.UserAgent = opts.UserAgent
-	}
-
-	err := c.refreshAccessToken()
-	if err != nil {
-		return nil, err
+	if cfg != nil {
+		err = c.refreshAccessToken(cfg, opts.ConfigFile)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	c.Headers = opts.Headers
@@ -192,19 +217,50 @@ func NewClientOrDie(opts *Options) Client {
 	return client
 }
 
-// fix
-func (c *client) refreshAccessToken() error {
+func (c *client) refreshAccessToken(cfg *Config, configFile string) error {
+	if c.RefreshToken == "" {
+		// If we have no refresh token, there's no point in doing anything
+		return nil
+	}
+
+	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
+	var claims jwt.RegisteredClaims
+	_, _, err := parser.ParseUnverified(cfg.Token.AccessToken, &claims)
+	if err != nil {
+		return err
+	}
+
+	validator := jwt.NewValidator()
+	if validator.Validate(claims) == nil {
+		// token is still valid
+		return nil
+	}
+
+	log.Debug("Auth token no longer valid. Refreshing")
+	token, err := c.redeemRefreshToken()
+	if err != nil {
+		return err
+	}
+	c.AccessToken = token.AccessToken
+	c.RefreshToken = token.RefreshToken
+
+	// save access and refresh token
+	cfg.Token.AccessToken = token.AccessToken
+	cfg.Token.RefreshToken = token.RefreshToken
+	cfg.Token.Expiry = token.Expiry.Format(time.RFC3339)
+	err = WriteConfig(*cfg, configFile)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// fix
-func (c *client) redeemRefreshToken(t *oauth2.Token) (*oauth2.Token, error) {
+func (c *client) redeemRefreshToken() (*oauth2.Token, error) {
 	httpClient, err := c.HTTPClient()
 	if err != nil {
 		return nil, err
 	}
-
 	ctx := oidc.ClientContext(context.Background(), httpClient)
 
 	oauth2conf, _, err := c.OIDCConfig(ctx)
@@ -212,6 +268,9 @@ func (c *client) redeemRefreshToken(t *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
+	t := &oauth2.Token{
+		RefreshToken: c.RefreshToken,
+	}
 	token, err := oauth2conf.TokenSource(ctx, t).Token()
 	if err != nil {
 		return nil, err
@@ -252,32 +311,42 @@ func (c *client) HTTPClient() (*http.Client, error) {
 	}, nil
 }
 
-// fix
-func (c *client) OIDCConfig(ctx context.Context, set settingsv1.SettingsResponse) (*oauth2.Config, *oidc.Provider, error) {
-	var clientID string
-	var issuerURL string
+func (c *client) OIDCConfig(ctx context.Context) (*oauth2.Config, *oidc.Provider, error) {
+	var clientId string
+	var issuerUrl string
 	var scopes []string
 
-	if set.OidcConfig != nil && set.OidcConfig.Issuer != "" {
-		if set.OidcConfig.CliClientId != "" {
-			clientID = set.OidcConfig.CliClientId
+	settingsConn, settingsClient, err := c.NewSettingsClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func() { _ = settingsConn.Close() }()
+
+	settings, err := settingsClient.Settings(ctx, &settingsv1.SettingsRequest{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if settings.OidcConfig != nil && settings.OidcConfig.Issuer != "" {
+		if settings.OidcConfig.CliClientId != "" {
+			clientId = settings.OidcConfig.CliClientId
 		} else {
-			clientID = set.OidcConfig.ClientId
+			clientId = settings.OidcConfig.ClientId
 		}
-		issuerURL = set.OidcConfig.Issuer
-		scopes = set.OidcConfig.Scopes
+		issuerUrl = settings.OidcConfig.Issuer
+		scopes = settings.OidcConfig.Scopes
 	} else {
 		return nil, nil, fmt.Errorf("%s is not configured with SSO", c.ServerAddress)
 	}
 
-	provider, err := oidc.NewProvider(ctx, issuerURL)
+	provider, err := oidc.NewProvider(ctx, issuerUrl)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to query provider %q: %v", issuerURL, err)
+		return nil, nil, fmt.Errorf("failed to query provider %q: %v", issuerUrl, err)
 	}
 
 	oidcConf, err := oidcutil.ParseConfig(provider)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to parse provider config: %v", err)
+		return nil, nil, fmt.Errorf("failed to parse provider config: %v", err)
 	}
 
 	scopes = oidcutil.GetScopesOrDefault(scopes)
@@ -286,12 +355,16 @@ func (c *client) OIDCConfig(ctx context.Context, set settingsv1.SettingsResponse
 	}
 
 	oauth2conf := oauth2.Config{
-		ClientID: clientID,
+		ClientID: clientId,
 		Scopes:   scopes,
 		Endpoint: provider.Endpoint(),
 	}
 
 	return &oauth2conf, provider, nil
+}
+
+func (c *client) UpsertToken(token *oauth2.Token) error {
+	return nil
 }
 
 func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {

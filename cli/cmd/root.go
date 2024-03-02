@@ -13,8 +13,8 @@ import (
 	utillog "go.datalift.io/admiral/cli/internal/util/log"
 
 	"go.datalift.io/admiral/cli/internal/common"
-	"go.datalift.io/admiral/cli/internal/config"
 	"go.datalift.io/admiral/common/client"
+	"go.datalift.io/admiral/common/config"
 	"go.datalift.io/admiral/common/util/env"
 	"go.datalift.io/admiral/common/util/text"
 	"go.datalift.io/admiral/common/version"
@@ -58,11 +58,6 @@ func (cmd *rootCmd) Execute(args []string) {
 type rootCmd struct {
 	cmd  *cobra.Command
 	exit func(int)
-
-	accessToken string
-	// config
-	configPath     string
-	configFilePath string
 }
 
 func newRootCmd(version version.Version, exit func(int)) *rootCmd {
@@ -100,14 +95,14 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	cmd.PersistentFlags().StringVar(&logLevel, "loglevel", "info", "Set the logging level. One of: debug|info|warn|error")
 
 	// config options
-	defaultConfigPath, err := config.ConfigDir()
+	defaultConfigFile, err := config.DefaultFile()
 	if err != nil {
-		log.WithError(err).Fatal("failed to get default config path")
+		log.WithError(err).Fatal("failed to get default config file")
 	}
-	cmd.PersistentFlags().StringVar(&root.configPath, "config-dir", defaultConfigPath, "path to config directory")
+	cmd.PersistentFlags().StringVarP(&clientOpts.ConfigFile, "config", "f", defaultConfigFile, "Path to configuration file")
 
 	// auth options
-	cmd.PersistentFlags().StringVar(&root.accessToken, "access-token", "", "access token")
+	cmd.PersistentFlags().StringVar(&clientOpts.AccessToken, "access-token", "", "access token")
 
 	// server options
 	cmd.PersistentFlags().StringVarP(&clientOpts.ServerAddress, "server", "s", env.StringFromEnv(common.EnvServerAddress, ""), "host:port of the api server")
@@ -123,6 +118,8 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 
 	cmd.AddCommand(
 		account.NewAccountCmd(&clientOpts).Cmd,
+		NewLoginCmd(&clientOpts).Cmd,
+		NewLogoutCmd(&clientOpts).Cmd,
 		newManCmd().cmd,
 		cobracompletefig.CreateCompletionSpecCommand(),
 	)
