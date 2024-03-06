@@ -47,7 +47,7 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149 # v3.3.0
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@767b08fd8822486ad890abb8f1d31721bebd651c # v0.15.7
+        uses: anchore/sbom-action/download-syft@9fece9e20048ca9590af301449208b2b8861333b # v0.15.9
       - name: Install UPX
         uses: crazy-max/ghaction-upx@0fc45e912669ba9e8fa2b430e97c8da2a632e29b # v3.0.0
         with:
