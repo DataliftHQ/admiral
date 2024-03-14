@@ -29,6 +29,6 @@
     "license-checker": "^25.0.1",
     "sort-package-json": "^2.8.0",
     "typescript": "^5.2.2",
-    "vite": "^5.1.4"
+    "vite": "^5.1.6"
   }
 }
