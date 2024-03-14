@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package admiral.config.service.authn.v1;
+
+import "validate/validate.proto";
+
+message OIDC {
+  string issuer = 1 [ (validate.rules).string = {min_bytes : 1} ];
+  string client_id = 2 [ (validate.rules).string = {min_bytes : 1} ];
+  string client_secret = 3 [ (validate.rules).string = {min_bytes : 1} ];
+
+  string redirect_url = 4 [ (validate.rules).string = {min_bytes : 1} ];
+
+  repeated string scopes = 5;
+
+  // The subject is mapped from the JWT token's email claim by default.
+  // Set this field to the JWT token's claim name to override the subject.
+  string subject_claim_name_override = 6;
+  // Groups are not mapped by default.
+  // Set this field to the JWT token's group claim name to override the groups.
+  string groups_claim_name_override = 7;
+}
+
+message Config {
+  // Used to sign the nonce or any other JWT secrets.
+  string session_secret = 1 [ (validate.rules).string = {min_bytes : 1} ];
+
+  oneof type {
+    OIDC oidc = 2;
+  }
+
+  // Whether to permit service tokens to be issued. In addition to setting this flag
+  // a token store must be configured.
+  bool enable_service_token_creation = 3;
+}

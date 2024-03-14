@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package admiral.authn.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+import "api/v1/annotations.proto";
+import "validate/validate.proto";
+
+service AuthnAPI {
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      get : "/v1/authn/login"
+    };
+    option (admiral.api.v1.action).type = READ;
+  }
+
+  rpc Callback(CallbackRequest) returns (CallbackResponse) {
+    option (google.api.http) = {
+      get : "/v1/authn/callback"
+    };
+    option (admiral.api.v1.action).type = CREATE;
+  }
+
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
+    option (google.api.http) = {
+      post : "/v1/authn/createToken"
+      body : "*"
+    };
+    option (admiral.api.v1.action).type = CREATE;
+  }
+}
+
+message LoginRequest {
+  option (admiral.api.v1.redacted) = true;
+  string redirect_url = 1;
+}
+
+message LoginResponse {
+  option (admiral.api.v1.redacted) = true;
+
+  message Token {
+    string access_token = 1;
+    string refresh_token = 2;
+  }
+
+  // If the user presents a refresh token and refresh succeeds, they will receive the token in response. Otherwise,
+  // they will be redirected through the authentication flow.
+  oneof return {
+    string auth_url = 1;
+    Token token = 2;
+  }
+}
+
+// See https://www.oauth.com/oauth2-servers/authorization/the-authorization-response/ for description of the parameters.
+message CallbackRequest {
+  option (admiral.api.v1.redacted) = true;
+
+  string code = 1;
+  string state = 2;
+  string error = 3;
+  string error_description = 4;
+}
+
+message CallbackResponse {
+  option (admiral.api.v1.redacted) = true;
+
+  // This is the token that the user should present. Note: this response is only valid in a gRPC context. In an HTTP
+  // context the user will be redirected.
+  string access_token = 1;
+
+  // The refresh token will be empty if no refresh token was issued.
+  string refresh_token = 2;
+}
+
+message CreateTokenRequest {
+  option (admiral.api.v1.redacted) = true;
+
+  // The subject to issue this token for.
+  string subject = 1 [ (validate.rules).string = {min_bytes : 1} ];
+
+  // The duration until this token should expire. If unset, the token will never expire.
+  google.protobuf.Duration expiry = 2;
+
+  enum TokenType {
+    UNSPECIFIED = 0;
+    // Token is issued on behalf of another service for programmatic access.
+    SERVICE = 1;
+  }
+
+  // The kind of token to issue. This provides namespacing to avoid naming collisions.
+  TokenType token_type = 3 [ (validate.rules).enum = {defined_only : true not_in : 0} ];
+}
+
+message CreateTokenResponse {
+  option (admiral.api.v1.redacted) = true;
+
+  // The access token associated with the newly created token.
+  string access_token = 1;
+}

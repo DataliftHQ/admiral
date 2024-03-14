@@ -2,23 +2,19 @@ package client
 
 import (
 	"context"
-	"crypto/tls"
-	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"go.datalift.io/admiral/common/config"
 	"io"
 	"math"
 	"net"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v5"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
-	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -60,26 +56,15 @@ type Options struct {
 }
 
 type client struct {
-	ServerAddress string
-	PlainText     bool
-	Insecure      bool
-	CertPEMData   []byte
-	ClientCert    *tls.Certificate
-	AccessToken   string
-	RefreshToken  string
-	UserAgent     string
-	Headers       []string
-
-	Config     config.Config
+	config     *config.Config
 	httpClient *http.Client
 }
 
 type Client interface {
-	ClientOptions() Options
 	HTTPClient() (*http.Client, error)
 
 	OIDCConfig(context.Context) (*oauth2.Config, *oidc.Provider, error)
-	UpsertToken(*oauth2.Token) error
+	Config() *config.Config
 
 	NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, error)
 	NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient)
@@ -87,98 +72,93 @@ type Client interface {
 	NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient)
 }
 
-func (c *client) ClientOptions() Options {
-	return Options{
-		ServerAddress: c.ServerAddress,
-		PlainText:     c.PlainText,
-		Insecure:      c.Insecure,
-	}
-}
-
 func NewClient(opts *Options) (Client, error) {
 	var c client
+	var err error
 
-	cfg, err := config.ReadFile(opts.ConfigFile)
+	c.config, err = config.Read(opts.ConfigFile)
 	if err != nil {
 		return nil, err
 	}
 
-	if cfg != nil {
-		c.ServerAddress = cfg.ServerAddress
-		if cfg.CACertificateAuthorityData != "" {
-			c.CertPEMData, err = base64.StdEncoding.DecodeString(cfg.CACertificateAuthorityData)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		if cfg.ClientCertificateData != "" && cfg.ClientCertificateKeyData != "" {
-			clientCertData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateData)
-			if err != nil {
-				return nil, err
-			}
-			clientCertKeyData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateKeyData)
-			if err != nil {
-				return nil, err
-			}
-			clientCert, err := tls.X509KeyPair(clientCertData, clientCertKeyData)
-			if err != nil {
-				return nil, err
-			}
-			c.ClientCert = &clientCert
-		} else if cfg.ClientCertificateData != "" || cfg.ClientCertificateKeyData != "" {
-			return nil, errors.New("ClientCertificateData and ClientCertificateKeyData must always be specified together")
-		}
-		c.PlainText = cfg.PlainText
-		c.Insecure = cfg.Insecure
-		c.AccessToken = cfg.Token.AccessToken
-		c.RefreshToken = cfg.Token.RefreshToken
-	}
+	//// config exists, use it and update with options
+	//if cfg != nil {
+	//	c.ServerAddress = cfg.ServerAddress
+	//	if cfg.CACertificateAuthorityData != "" {
+	//		c.CertPEMData, err = base64.StdEncoding.DecodeString(cfg.CACertificateAuthorityData)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//	}
+	//
+	//	if cfg.ClientCertificateData != "" && cfg.ClientCertificateKeyData != "" {
+	//		clientCertData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateData)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		clientCertKeyData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateKeyData)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		clientCert, err := tls.X509KeyPair(clientCertData, clientCertKeyData)
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		c.ClientCert = &clientCert
+	//	} else if cfg.ClientCertificateData != "" || cfg.ClientCertificateKeyData != "" {
+	//		return nil, errors.New("ClientCertificateData and ClientCertificateKeyData must always be specified together")
+	//	}
+	//	c.PlainText = cfg.PlainText
+	//	c.Insecure = cfg.Insecure
+	//	c.AccessToken = cfg.Token.AccessToken
+	//	c.RefreshToken = cfg.Token.RefreshToken
+	//}
 
 	if opts.UserAgent == "" {
-		c.UserAgent = fmt.Sprintf("%s/%s", "admiral-client", "unknown")
+		c.config.Settings.UserAgent = fmt.Sprintf("%s/%s", "admiral-client", "unknown")
 	} else {
-		c.UserAgent = opts.UserAgent
+		c.config.Settings.UserAgent = opts.UserAgent
 	}
 
 	if opts.ServerAddress != "" {
-		c.ServerAddress = opts.ServerAddress
+		c.config.Settings.ServerAddress = opts.ServerAddress
 	}
-	if c.ServerAddress == "" {
+	if c.config.Settings.ServerAddress == "" {
 		return nil, errors.New("server address is unspecified")
 	}
 
-	// Override auth-token if specified in env variable or CLI flag
-	c.AccessToken = env.StringFromEnv(EnvAdmiralAccessToken, c.AccessToken)
-	if opts.AccessToken != "" {
-		c.AccessToken = strings.TrimSpace(opts.AccessToken)
-	}
-
-	if opts.CertFile != "" {
-		b, err := os.ReadFile(opts.CertFile)
-		if err != nil {
-			return nil, err
-		}
-		c.CertPEMData = b
-	}
-
-	if opts.ClientCertFile != "" && opts.ClientCertKeyFile != "" {
-		clientCert, err := tls.LoadX509KeyPair(opts.ClientCertFile, opts.ClientCertKeyFile)
-		if err != nil {
-			return nil, err
-		}
-		c.ClientCert = &clientCert
-	} else if opts.ClientCertFile != "" || opts.ClientCertKeyFile != "" {
-		return nil, errors.New("--client-crt and --client-crt-key must always be specified together")
-	}
+	//// Override auth-token if specified in env variable or CLI flag
+	//c.AccessToken = env.StringFromEnv(EnvAdmiralAccessToken, c.AccessToken)
+	//if opts.AccessToken != "" {
+	//	c.AccessToken = strings.TrimSpace(opts.AccessToken)
+	//}
+	//
+	//if opts.CertFile != "" {
+	//	b, err := os.ReadFile(opts.CertFile)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	c.CertPEMData = b
+	//}
+	//
+	//if opts.ClientCertFile != "" && opts.ClientCertKeyFile != "" {
+	//	clientCert, err := tls.LoadX509KeyPair(opts.ClientCertFile, opts.ClientCertKeyFile)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	c.ClientCert = &clientCert
+	//} else if opts.ClientCertFile != "" || opts.ClientCertKeyFile != "" {
+	//	return nil, errors.New("--client-crt and --client-crt-key must always be specified together")
+	//}
 
 	if opts.PlainText {
-		c.PlainText = true
+		c.config.Settings.PlainText = true
 	}
 	if opts.Insecure {
-		c.Insecure = true
+		c.config.Settings.Insecure = true
 	}
 
+	// TODO: blue tape
 	if opts.HttpRetryMax > 0 {
 		retryClient := retryablehttp.NewClient()
 		retryClient.RetryMax = opts.HttpRetryMax
@@ -187,7 +167,8 @@ func NewClient(opts *Options) (Client, error) {
 		c.httpClient = &http.Client{}
 	}
 
-	if !c.PlainText {
+	// TODO: blue tape
+	if !c.config.Settings.PlainText {
 		tlsConfig, err := c.tlsConfig()
 		if err != nil {
 			return nil, err
@@ -197,14 +178,20 @@ func NewClient(opts *Options) (Client, error) {
 		}
 	}
 
-	if cfg != nil {
-		err = c.refreshAccessToken(cfg, opts.ConfigFile)
-		if err != nil {
-			return nil, err
-		}
-	}
+	//if cfg != nil {
+	//	err = c.refreshAccessToken(cfg, opts.ConfigFile)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
+	//
+	//c.Headers = opts.Headers
 
-	c.Headers = opts.Headers
+	// Save the config file
+	err = c.config.Save()
+	if err != nil {
+		return nil, err
+	}
 
 	return &c, nil
 }
@@ -217,15 +204,15 @@ func NewClientOrDie(opts *Options) Client {
 	return client
 }
 
-func (c *client) refreshAccessToken(cfg *Config, configFile string) error {
-	if c.RefreshToken == "" {
+func (c *client) refreshAccessToken() error {
+	if c.config.Token.RefreshToken == "" {
 		// If we have no refresh token, there's no point in doing anything
 		return nil
 	}
 
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
 	var claims jwt.RegisteredClaims
-	_, _, err := parser.ParseUnverified(cfg.Token.AccessToken, &claims)
+	_, _, err := parser.ParseUnverified(c.config.Token.AccessToken, &claims)
 	if err != nil {
 		return err
 	}
@@ -241,14 +228,9 @@ func (c *client) refreshAccessToken(cfg *Config, configFile string) error {
 	if err != nil {
 		return err
 	}
-	c.AccessToken = token.AccessToken
-	c.RefreshToken = token.RefreshToken
 
-	// save access and refresh token
-	cfg.Token.AccessToken = token.AccessToken
-	cfg.Token.RefreshToken = token.RefreshToken
-	cfg.Token.Expiry = token.Expiry.Format(time.RFC3339)
-	err = WriteConfig(*cfg, configFile)
+	c.config.Token = *token
+	err = c.config.Save()
 	if err != nil {
 		return err
 	}
@@ -269,7 +251,7 @@ func (c *client) redeemRefreshToken() (*oauth2.Token, error) {
 	}
 
 	t := &oauth2.Token{
-		RefreshToken: c.RefreshToken,
+		RefreshToken: c.config.Token.RefreshToken,
 	}
 	token, err := oauth2conf.TokenSource(ctx, t).Token()
 	if err != nil {
@@ -285,13 +267,13 @@ func (c *client) HTTPClient() (*http.Client, error) {
 		return nil, err
 	}
 
-	headers, err := parseHeaders(c.Headers)
+	headers, err := parseHeaders(c.config.Settings.Headers)
 	if err != nil {
 		return nil, err
 	}
 
-	if c.UserAgent != "" {
-		headers.Set("User-Agent", c.UserAgent)
+	if c.config.Settings.UserAgent != "" {
+		headers.Set("User-Agent", c.config.Settings.UserAgent)
 	}
 
 	return &http.Client{
@@ -336,7 +318,7 @@ func (c *client) OIDCConfig(ctx context.Context) (*oauth2.Config, *oidc.Provider
 		issuerUrl = settings.OidcConfig.Issuer
 		scopes = settings.OidcConfig.Scopes
 	} else {
-		return nil, nil, fmt.Errorf("%s is not configured with SSO", c.ServerAddress)
+		return nil, nil, fmt.Errorf("%s is not configured with SSO", c.config.Settings.ServerAddress)
 	}
 
 	provider, err := oidc.NewProvider(ctx, issuerUrl)
@@ -363,17 +345,17 @@ func (c *client) OIDCConfig(ctx context.Context) (*oauth2.Config, *oidc.Provider
 	return &oauth2conf, provider, nil
 }
 
-func (c *client) UpsertToken(token *oauth2.Token) error {
-	return nil
+func (c *client) Config() *config.Config {
+	return c.config
 }
 
 func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {
 	closers := make([]io.Closer, 0)
-	serverAddr := c.ServerAddress
+	serverAddr := c.config.Settings.ServerAddress
 	network := "tcp"
 
 	var creds credentials.TransportCredentials
-	if !c.PlainText {
+	if !c.config.Settings.PlainText {
 		tlsConfig, err := c.tlsConfig()
 		if err != nil {
 			return nil, nil, err
@@ -382,7 +364,7 @@ func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {
 	}
 
 	endpointCredentials := jwtCredentials{
-		Token: c.AccessToken,
+		Token: c.config.Token.AccessToken,
 	}
 
 	retryOpts := []grpcretry.CallOption{
@@ -400,7 +382,7 @@ func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {
 
 	ctx := context.Background()
 
-	headers, err := parseHeaders(c.Headers)
+	headers, err := parseHeaders(c.config.Settings.Headers)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -410,8 +392,8 @@ func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {
 		}
 	}
 
-	if c.UserAgent != "" {
-		dialOpts = append(dialOpts, grpc.WithUserAgent(c.UserAgent))
+	if c.config.Settings.UserAgent != "" {
+		dialOpts = append(dialOpts, grpc.WithUserAgent(c.config.Settings.UserAgent))
 	}
 
 	conn, e := grpcutil.BlockingDial(ctx, network, serverAddr, creds, dialOpts...)
@@ -441,7 +423,7 @@ func (c *client) NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, erro
 func (c *client) NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient) {
 	conn, sessionIf, err := c.NewSessionClient()
 	if err != nil {
-		log.Fatalf("Failed to establish connection to %s: %v", c.ServerAddress, err)
+		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
 	}
 	return conn, sessionIf
 }
@@ -458,7 +440,7 @@ func (c *client) NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, e
 func (c *client) NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient) {
 	conn, setIf, err := c.NewSettingsClient()
 	if err != nil {
-		log.Fatalf("Failed to establish connection to %s: %v", c.ServerAddress, err)
+		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
 	}
 	return conn, setIf
 }

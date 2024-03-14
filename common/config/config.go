@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,8 +14,10 @@ import (
 )
 
 type Config struct {
-	Settings Settings      `json:"settings"`
-	Token    *oauth2.Token `json:"token"`
+	path string `json:"-"`
+
+	Settings Settings     `json:"settings"`
+	Token    oauth2.Token `json:"token"`
 }
 
 type Settings struct {
@@ -22,10 +25,12 @@ type Settings struct {
 	PlainText     bool   `json:"plainText"`
 	Insecure      bool   `json:"insecure"`
 	CertPEMData   []byte
-	ClientCert    []byte
+	ClientCert    *tls.Certificate // TODO: THINK ABOUT THIS
+	UserAgent     string           `json:"userAgent,omitempty"`
+	Headers       []string         `json:"headers,omitempty"`
 }
 
-func DefaultFile() (string, error) {
+func DefaultPath() (string, error) {
 	if configFile := os.Getenv("ADMIRAL_CONFIG_FILE"); configFile != "" {
 		return configFile, nil
 	}
@@ -46,11 +51,7 @@ func DefaultFile() (string, error) {
 	return path.Join(homeDir, ".config", "admiral", "admiral.json"), nil
 }
 
-func ReadFile(path string) (*Config, error) {
-	return nil, nil
-}
-
-func ReadConfig(path string) (*Config, error) {
+func Read(path string) (*Config, error) {
 	var err error
 	var config Config
 
@@ -64,7 +65,7 @@ func ReadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return nil, nil
+			return &Config{path: path}, nil
 		} else {
 			return nil, err
 		}
@@ -75,28 +76,31 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	// set path after unmarshalling
+	config.path = path
+
 	return &config, nil
 }
 
-func WriteConfig(config Config, configPath string) error {
-	err := os.MkdirAll(path.Dir(configPath), os.ModePerm)
+func (c *Config) Save() error {
+	err := os.MkdirAll(path.Dir(c.path), os.ModePerm)
 	if err != nil {
 		return err
 	}
 
-	data, err := json.Marshal(config)
+	data, err := json.Marshal(c)
 	if err == nil {
-		err = os.WriteFile(configPath, data, 0600)
+		err = os.WriteFile(c.path, data, 0600)
 	}
 	return err
 }
 
-func DeleteConfig(configPath string) error {
-	_, err := os.Stat(configPath)
+func (c *Config) Delete() error {
+	_, err := os.Stat(c.path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	return os.Remove(configPath)
+	return os.Remove(c.path)
 }
 
 func getFilePermission(fi os.FileInfo) error {

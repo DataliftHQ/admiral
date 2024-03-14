@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package admiral.config.service.authn.v1;
+
+import "validate/validate.proto";
+
+message StorageConfig {
+  // Encryption passphrase for credentials stored in the database.
+  string encryption_passphrase = 1 [ (validate.rules).string = {min_bytes : 1} ];
+}

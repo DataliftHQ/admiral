@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package admiral.config.service.temporal.v1;
+
+import "validate/validate.proto";
+
+message Config {
+
+  // Using a "dns:///" prefixed address for the host will periodically resolve all IPs for DNS address given and round
+  // robin amongst them.
+  string host = 1 [ (validate.rules).string = {min_bytes : 1} ];
+  uint32 port = 2 [ (validate.rules).uint32 = {lte : 65535} ];
+  ConnectionOptions connection_options = 3;
+}
+
+message ConnectionOptions {
+  bool use_system_ca_bundle = 1;
+}

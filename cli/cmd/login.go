@@ -119,7 +119,7 @@ func NewLoginCmd(clientOpts *client.Options) *LoginCmd {
 				}
 
 				// save the token to the config file
-				config := admiral.ClientConfig()
+				config := admiral.Config()
 				config.Token = *token
 
 				err = config.Save()
