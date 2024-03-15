@@ -21,6 +21,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
+	foov1 "go.datalift.io/admiral/common/api/foo/v1"
 	sessionv1 "go.datalift.io/admiral/common/api/session/v1"
 	settingsv1 "go.datalift.io/admiral/common/api/settings/v1"
 	"go.datalift.io/admiral/common/util/env"
@@ -70,6 +71,9 @@ type Client interface {
 	NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient)
 	NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error)
 	NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient)
+
+	NewFooClient() (io.Closer, foov1.FooAPIClient, error)
+	NewFooClientOrDie() (io.Closer, foov1.FooAPIClient)
 }
 
 func NewClient(opts *Options) (Client, error) {
@@ -178,6 +182,7 @@ func NewClient(opts *Options) (Client, error) {
 		}
 	}
 
+	log.Info("reached")
 	//if cfg != nil {
 	//	err = c.refreshAccessToken(cfg, opts.ConfigFile)
 	//	if err != nil {
@@ -416,16 +421,16 @@ func (c *client) NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, erro
 	if err != nil {
 		return nil, nil, err
 	}
-	sessionIf := sessionv1.NewSessionAPIClient(conn)
-	return closer, sessionIf, nil
+	sessionClient := sessionv1.NewSessionAPIClient(conn)
+	return closer, sessionClient, nil
 }
 
 func (c *client) NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient) {
-	conn, sessionIf, err := c.NewSessionClient()
+	conn, sessionClient, err := c.NewSessionClient()
 	if err != nil {
 		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
 	}
-	return conn, sessionIf
+	return conn, sessionClient
 }
 
 func (c *client) NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error) {
@@ -433,14 +438,31 @@ func (c *client) NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, e
 	if err != nil {
 		return nil, nil, err
 	}
-	setIf := settingsv1.NewSettingsAPIClient(conn)
-	return closer, setIf, nil
+	settingClient := settingsv1.NewSettingsAPIClient(conn)
+	return closer, settingClient, nil
 }
 
 func (c *client) NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClient) {
-	conn, setIf, err := c.NewSettingsClient()
+	conn, settingClient, err := c.NewSettingsClient()
 	if err != nil {
 		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
 	}
-	return conn, setIf
+	return conn, settingClient
+}
+
+func (c *client) NewFooClient() (io.Closer, foov1.FooAPIClient, error) {
+	conn, closer, err := c.newConn()
+	if err != nil {
+		return nil, nil, err
+	}
+	fooClient := foov1.NewFooAPIClient(conn)
+	return closer, fooClient, nil
+}
+
+func (c *client) NewFooClientOrDie() (io.Closer, foov1.FooAPIClient) {
+	conn, fooClient, err := c.NewFooClient()
+	if err != nil {
+		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
+	}
+	return conn, fooClient
 }

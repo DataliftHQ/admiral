@@ -120,6 +120,7 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 		account.NewAccountCmd(&clientOpts).Cmd,
 		NewLoginCmd(&clientOpts).Cmd,
 		NewLogoutCmd(&clientOpts).Cmd,
+		NewFooCmd(&clientOpts).Cmd,
 		newManCmd().cmd,
 		cobracompletefig.CreateCompletionSpecCommand(),
 	)

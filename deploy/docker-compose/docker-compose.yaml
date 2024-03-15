@@ -22,21 +22,69 @@ services:
       - db:/var/lib/postgresql/data
       - ./postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
 
-  mailpit:
-    container_name: mailpit
-    image: axllent/mailpit:latest
-    environment:
-      MP_MAX_MESSAGES: 5000
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
-    healthcheck:
-      test: /usr/bin/nc -v localhost 1025
-      interval: 30s
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    restart: always
     networks:
       - admiral-network
     ports:
-      - 8025:8025
-      - 1025:1025
+      - 6329:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass secret
+    volumes:
+      - redis:/data
+
+  temporal:
+    container_name: temporal
+    image: temporalio/auto-setup:latest
+    environment:
+      DB: postgres
+      DB_PORT: 5432
+      POSTGRES_USER: admiral
+      POSTGRES_PWD: secret
+      POSTGRES_SEEDS: postgres
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
+    healthcheck:
+      test: ['CMD-SHELL', 'tctl --address temporal:7233 workflow list']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - admiral-network
+    ports:
+      - 7233:7233
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./temporal:/etc/temporal/config/dynamicconfig
+
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    image: temporalio/admin-tools:latest
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    depends_on:
+      temporal:
+        condition: service_healthy
+    networks:
+      - admiral-network
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    container_name: temporal-ui
+    image: temporalio/ui:latest
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      temporal:
+        condition: service_healthy
+    networks:
+      - admiral-network
+    ports:
+      - 7070:8080
 
   keycloak:
     container_name: keycloak
@@ -73,8 +121,26 @@ services:
       postgres:
         condition: service_healthy
 
+  mailpit:
+    container_name: mailpit
+    image: axllent/mailpit:latest
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    healthcheck:
+      test: /usr/bin/nc -v localhost 1025
+      interval: 30s
+    networks:
+      - admiral-network
+    ports:
+      - 8025:8025
+      - 1025:1025
+
 volumes:
   db:
+    driver: local
+  redis:
     driver: local
 
 networks:
