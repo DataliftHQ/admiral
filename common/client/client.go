@@ -2,19 +2,21 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-retryablehttp"
-	"go.datalift.io/admiral/common/config"
 	"io"
 	"math"
 	"net"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v5"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
+	"github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -24,6 +26,7 @@ import (
 	foov1 "go.datalift.io/admiral/common/api/foo/v1"
 	sessionv1 "go.datalift.io/admiral/common/api/session/v1"
 	settingsv1 "go.datalift.io/admiral/common/api/settings/v1"
+	"go.datalift.io/admiral/common/config"
 	"go.datalift.io/admiral/common/util/env"
 	grpcutil "go.datalift.io/admiral/common/util/grpc"
 	httputil "go.datalift.io/admiral/common/util/http"
@@ -32,8 +35,6 @@ import (
 )
 
 const (
-	MetaDataTokenKey        = "token"
-	EnvAdmiralServer        = "ADMIRAL_SERVER"
 	EnvAdmiralAccessToken   = "ADMIRAL_ACCESS_TOKEN"
 	EnvAdmiralgRPCMaxSizeMB = "ADMIRAL_GRPC_MAX_SIZE_MB"
 )
@@ -76,6 +77,11 @@ type Client interface {
 	NewFooClientOrDie() (io.Closer, foov1.FooAPIClient)
 }
 
+// NOTE: Client options are saved automatically, a process that might not suit
+// all cases. It might be more user-friendly to allow users to explicitly
+// save their settings, or to introduce a configuration option enabling this
+// feature. Additionally, if this approach is adopted, it's advisable to store
+// credentials (access and refresh tokens) separately from the settings.
 func NewClient(opts *Options) (Client, error) {
 	var c client
 	var err error
@@ -84,39 +90,6 @@ func NewClient(opts *Options) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	//// config exists, use it and update with options
-	//if cfg != nil {
-	//	c.ServerAddress = cfg.ServerAddress
-	//	if cfg.CACertificateAuthorityData != "" {
-	//		c.CertPEMData, err = base64.StdEncoding.DecodeString(cfg.CACertificateAuthorityData)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//	}
-	//
-	//	if cfg.ClientCertificateData != "" && cfg.ClientCertificateKeyData != "" {
-	//		clientCertData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateData)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		clientCertKeyData, err := base64.StdEncoding.DecodeString(cfg.ClientCertificateKeyData)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		clientCert, err := tls.X509KeyPair(clientCertData, clientCertKeyData)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		c.ClientCert = &clientCert
-	//	} else if cfg.ClientCertificateData != "" || cfg.ClientCertificateKeyData != "" {
-	//		return nil, errors.New("ClientCertificateData and ClientCertificateKeyData must always be specified together")
-	//	}
-	//	c.PlainText = cfg.PlainText
-	//	c.Insecure = cfg.Insecure
-	//	c.AccessToken = cfg.Token.AccessToken
-	//	c.RefreshToken = cfg.Token.RefreshToken
-	//}
 
 	if opts.UserAgent == "" {
 		c.config.Settings.UserAgent = fmt.Sprintf("%s/%s", "admiral-client", "unknown")
@@ -131,29 +104,30 @@ func NewClient(opts *Options) (Client, error) {
 		return nil, errors.New("server address is unspecified")
 	}
 
-	//// Override auth-token if specified in env variable or CLI flag
-	//c.AccessToken = env.StringFromEnv(EnvAdmiralAccessToken, c.AccessToken)
-	//if opts.AccessToken != "" {
-	//	c.AccessToken = strings.TrimSpace(opts.AccessToken)
-	//}
-	//
-	//if opts.CertFile != "" {
-	//	b, err := os.ReadFile(opts.CertFile)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	c.CertPEMData = b
-	//}
-	//
-	//if opts.ClientCertFile != "" && opts.ClientCertKeyFile != "" {
-	//	clientCert, err := tls.LoadX509KeyPair(opts.ClientCertFile, opts.ClientCertKeyFile)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	c.ClientCert = &clientCert
-	//} else if opts.ClientCertFile != "" || opts.ClientCertKeyFile != "" {
-	//	return nil, errors.New("--client-crt and --client-crt-key must always be specified together")
-	//}
+	// Override access-token if specified in env variable or CLI flag
+	c.config.Token.AccessToken = env.StringFromEnv(EnvAdmiralAccessToken, c.config.Token.AccessToken)
+	if opts.AccessToken != "" {
+		c.config.Token.AccessToken = strings.TrimSpace(opts.AccessToken)
+	}
+
+	if opts.CertFile != "" {
+		b, err := os.ReadFile(opts.CertFile)
+		if err != nil {
+			return nil, err
+		}
+
+		c.config.Settings.CertPEMData = b
+	}
+
+	if opts.ClientCertFile != "" && opts.ClientCertKeyFile != "" {
+		clientCert, err := tls.LoadX509KeyPair(opts.ClientCertFile, opts.ClientCertKeyFile)
+		if err != nil {
+			return nil, err
+		}
+		c.config.Settings.ClientCert = &clientCert
+	} else if opts.ClientCertFile != "" || opts.ClientCertKeyFile != "" {
+		return nil, errors.New("--client-crt and --client-crt-key must always be specified together")
+	}
 
 	if opts.PlainText {
 		c.config.Settings.PlainText = true
@@ -162,7 +136,6 @@ func NewClient(opts *Options) (Client, error) {
 		c.config.Settings.Insecure = true
 	}
 
-	// TODO: blue tape
 	if opts.HttpRetryMax > 0 {
 		retryClient := retryablehttp.NewClient()
 		retryClient.RetryMax = opts.HttpRetryMax
@@ -171,7 +144,6 @@ func NewClient(opts *Options) (Client, error) {
 		c.httpClient = &http.Client{}
 	}
 
-	// TODO: blue tape
 	if !c.config.Settings.PlainText {
 		tlsConfig, err := c.tlsConfig()
 		if err != nil {
@@ -182,15 +154,12 @@ func NewClient(opts *Options) (Client, error) {
 		}
 	}
 
-	log.Info("reached")
-	//if cfg != nil {
-	//	err = c.refreshAccessToken(cfg, opts.ConfigFile)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//}
-	//
-	//c.Headers = opts.Headers
+	err = c.refreshAccessToken()
+	if err != nil {
+		return nil, err
+	}
+
+	c.config.Settings.Headers = opts.Headers
 
 	// Save the config file
 	err = c.config.Save()
@@ -206,6 +175,7 @@ func NewClientOrDie(opts *Options) Client {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return client
 }
 
@@ -416,23 +386,6 @@ func (c *client) newConn() (*grpc.ClientConn, io.Closer, error) {
 	}), e
 }
 
-func (c *client) NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, error) {
-	conn, closer, err := c.newConn()
-	if err != nil {
-		return nil, nil, err
-	}
-	sessionClient := sessionv1.NewSessionAPIClient(conn)
-	return closer, sessionClient, nil
-}
-
-func (c *client) NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient) {
-	conn, sessionClient, err := c.NewSessionClient()
-	if err != nil {
-		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
-	}
-	return conn, sessionClient
-}
-
 func (c *client) NewSettingsClient() (io.Closer, settingsv1.SettingsAPIClient, error) {
 	conn, closer, err := c.newConn()
 	if err != nil {
@@ -448,6 +401,25 @@ func (c *client) NewSettingsClientOrDie() (io.Closer, settingsv1.SettingsAPIClie
 		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
 	}
 	return conn, settingClient
+}
+
+// ----------------------------------------------------------------------------
+
+func (c *client) NewSessionClient() (io.Closer, sessionv1.SessionAPIClient, error) {
+	conn, closer, err := c.newConn()
+	if err != nil {
+		return nil, nil, err
+	}
+	sessionClient := sessionv1.NewSessionAPIClient(conn)
+	return closer, sessionClient, nil
+}
+
+func (c *client) NewSessionClientOrDie() (io.Closer, sessionv1.SessionAPIClient) {
+	conn, sessionClient, err := c.NewSessionClient()
+	if err != nil {
+		log.Fatalf("Failed to establish connection to %s: %v", c.config.Settings.ServerAddress, err)
+	}
+	return conn, sessionClient
 }
 
 func (c *client) NewFooClient() (io.Closer, foov1.FooAPIClient, error) {
