@@ -27,6 +27,9 @@ func New(cfg *anypb.Any, _ *zap.Logger, _ tally.Scope) (service.Service, error) 
 		return nil, err
 	}
 
+	// DATABASE POSTGRES AS TOKEN STORAGE
+	//db, _ := service.Registry[]
+
 	tokenStorage, _ := service.Registry[StorageName].(Storage)
 
 	switch t := config.Type.(type) {

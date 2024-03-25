@@ -57,8 +57,7 @@ services:
           - openid
           - profile
           - email
-          - offline_access
-      session_secret: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAodN+hKi1epN5SVGD2IPHd/7O9LxHOKEYntvkYEDsGM5g+rhda40fR6OwEp+p6+03bNSH/YhXYEiXwitsOaZ2KLOQnwaMMLHGQ7UUxfs9IdhPyE7J2Il2U/sHWswxoPmjAroBXjdbHLZmxofZLatVgXKTkxcc6Bzf9AWIEjDrvgLlaKevf1GpSShxuaEIiVsJOippE5xKIs/s8bi55aRihViTm6146P65nIxP75STgCcA9EHUicXBhYujf4i6JWhYSwjveIbS8Hep30IWxfMm91N/TNhiBNq1heyDIEybtOYMdFhf9u5queOYirz2HdBxUA8JxoPeQ98839DhlQ9XdwIDAQAB
+      session_secret: secret
       enable_service_token_creation: true
   - name: admiral.service.temporal
     typed_config:

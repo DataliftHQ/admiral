@@ -26,7 +26,7 @@ import (
 // Compatible with Okta offline access, a holdover from previous defaults.
 var defaultScopes = []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess, "email"}
 
-const clutchProvider = "clutch"
+const providerName = "admiral"
 
 type OIDCProvider struct {
 	provider *oidc.Provider
@@ -36,6 +36,7 @@ type OIDCProvider struct {
 	httpClient *http.Client
 
 	sessionSecret string
+	stateSecret   string
 
 	tokenStorage  Storage
 	providerAlias string
@@ -45,13 +46,11 @@ type OIDCProvider struct {
 	enableServiceTokenCreation bool
 }
 
-// Clutch's state token claims used during the exchange.
 type stateClaims struct {
 	*jwt.RegisteredClaims
 	RedirectURL string `json:"redirect"`
 }
 
-// Intermediate claims object for the ID token. Based on what scopes were requested.
 type idClaims struct {
 	Email string `json:"email"`
 }
@@ -67,30 +66,16 @@ func (p *OIDCProvider) GetAuthCodeURL(ctx context.Context, state string) (string
 	return p.oauth2.AuthCodeURL(state, opts...), nil
 }
 
-func (p *OIDCProvider) ValidateStateNonce(state string) (string, error) {
-	claims := &stateClaims{}
-	_, err := jwt.ParseWithClaims(state, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(p.sessionSecret), nil
-	})
-	if err != nil {
-		return "", err
-	}
-
-	validator := jwt.NewValidator()
-	if err := validator.Validate(claims); err != nil {
-		return "", err
-	}
-	return claims.RedirectURL, nil
-}
-
 func (p *OIDCProvider) GetStateNonce(redirectURL string) (string, error) {
 	u, err := url.Parse(redirectURL)
 	if err != nil {
 		return "", err
 	}
+
 	if u.Scheme != "" || u.Host != "" {
 		return "", errors.New("only relative redirects are supported")
 	}
+
 	dest := u.RequestURI()
 	if !strings.HasPrefix(dest, "/") {
 		dest = fmt.Sprintf("/%s", dest)
@@ -105,7 +90,24 @@ func (p *OIDCProvider) GetStateNonce(redirectURL string) (string, error) {
 		},
 		RedirectURL: dest,
 	}
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(p.sessionSecret))
+
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(p.stateSecret))
+}
+
+func (p *OIDCProvider) ValidateStateNonce(state string) (string, error) {
+	claims := &stateClaims{}
+	_, err := jwt.ParseWithClaims(state, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(p.stateSecret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	validator := jwt.NewValidator()
+	if err := validator.Validate(claims); err != nil {
+		return "", err
+	}
+	return claims.RedirectURL, nil
 }
 
 func (p *OIDCProvider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
@@ -187,7 +189,7 @@ func (p *OIDCProvider) RefreshToken(ctx context.Context, t *oauth2.Token) (*oaut
 	}
 
 	// Look up refresh token and verify it matches the one stored in the database.
-	rt, err := p.tokenStorage.Read(ctx, claims.Subject, clutchProvider)
+	rt, err := p.tokenStorage.Read(ctx, claims.Subject, providerName)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +271,7 @@ func (p *OIDCProvider) issueAndStoreToken(ctx context.Context, claims *Claims, r
 			t.RefreshToken = refreshToken
 		}
 
-		if err := p.tokenStorage.Store(ctx, claims.Subject, clutchProvider, t); err != nil {
+		if err := p.tokenStorage.Store(ctx, claims.Subject, providerName, t); err != nil {
 			return nil, err
 		}
 	}
@@ -345,7 +347,7 @@ dwIDAQAB
 	// TODO(perf): Cache the lookup result in-memory for min(60, timeToExpiry) to prevent
 	// hitting the DB on each request. This should also cache whether we didn't find a token.
 	if p.tokenStorage != nil {
-		_, err := p.tokenStorage.Read(ctx, claims.Subject, clutchProvider)
+		_, err := p.tokenStorage.Read(ctx, claims.Subject, providerName)
 		if err != nil {
 			return nil, err
 		}
@@ -447,6 +449,7 @@ func NewOIDCProvider(ctx context.Context, config *authnv1.Config, tokenStorage S
 		oauth2:                     oc,
 		httpClient:                 ctx.Value(oauth2.HTTPClient).(*http.Client),
 		sessionSecret:              config.SessionSecret,
+		stateSecret:                "seatecastronomy",
 		claimsFromOIDCToken:        claimsFromOIDCTokenFunc,
 		tokenStorage:               tokenStorage,
 		enableServiceTokenCreation: tokenStorage != nil && config.EnableServiceTokenCreation,

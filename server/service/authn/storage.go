@@ -1,9 +1,5 @@
 package authn
 
-// <!-- START clutchdoc -->
-// description: Stores tokens from the auth provider(s) in the database.
-// <!-- END clutchdoc -->
-
 import (
 	"context"
 
