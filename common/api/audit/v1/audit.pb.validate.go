@@ -18,7 +18,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	apiv1 "go.datalift.io/admiral/common/api/api/v1"
+	commonv1 "go.datalift.io/admiral/common/api/common/v1"
 )
 
 // ensure the imports are used
@@ -36,7 +36,7 @@ var (
 	_ = anypb.Any{}
 	_ = sort.Sort
 
-	_ = apiv1.ActionType(0)
+	_ = commonv1.ActionType(0)
 )
 
 // Validate checks the field values on TimeRange with the rules defined in the
@@ -785,7 +785,7 @@ func (m *RequestEvent) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if _, ok := apiv1.ActionType_name[int32(m.GetType())]; !ok {
+	if _, ok := commonv1.ActionType_name[int32(m.GetType())]; !ok {
 		err := RequestEventValidationError{
 			field:  "Type",
 			reason: "value must be one of the defined enum values",

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package admiral.users.v1;
+
+import "google/api/annotations.proto";
+
+import "common/v1/annotations.proto";
+
+service UsersAPI {
+
+  rpc GetMe(GetMeRequest) returns (GetMeResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users/me"
+    };
+    option (admiral.common.v1.action).type = READ;
+  }
+
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users"
+    };
+    option (admiral.common.v1.action).type = READ;
+  }
+}
+
+message GetMeRequest {}
+
+message GetMeResponse {
+  string id = 1;
+  string email = 2;
+  string given_name = 3;
+  string family_name = 4;
+}
+
+message GetUserRequest {
+}
+
+message GetUserResponse {
+  string id = 1;
+  string email = 2;
+  string given_name = 3;
+  string family_name = 4;
+}

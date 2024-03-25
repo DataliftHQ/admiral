@@ -4,40 +4,41 @@ package admiral.authn.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/duration.proto";
-import "api/v1/annotations.proto";
 import "validate/validate.proto";
+
+import "common/v1/annotations.proto";
 
 service AuthnAPI {
   rpc Login(LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
-      get : "/v1/authn/login"
+      get : "/auth/login"
     };
-    option (admiral.api.v1.action).type = READ;
+    option (admiral.common.v1.action).type = READ;
   }
 
   rpc Callback(CallbackRequest) returns (CallbackResponse) {
     option (google.api.http) = {
-      get : "/v1/authn/callback"
+      get : "/auth/callback"
     };
-    option (admiral.api.v1.action).type = CREATE;
+    option (admiral.common.v1.action).type = CREATE;
   }
 
   rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse) {
     option (google.api.http) = {
-      post : "/v1/authn/createToken"
+      post : "/api/v1/authn/createToken"
       body : "*"
     };
-    option (admiral.api.v1.action).type = CREATE;
+    option (admiral.common.v1.action).type = CREATE;
   }
 }
 
 message LoginRequest {
-  option (admiral.api.v1.redacted) = true;
+  option (admiral.common.v1.redacted) = true;
   string redirect_url = 1;
 }
 
 message LoginResponse {
-  option (admiral.api.v1.redacted) = true;
+  option (admiral.common.v1.redacted) = true;
 
   message Token {
     string access_token = 1;
@@ -54,7 +55,7 @@ message LoginResponse {
 
 // See https://www.oauth.com/oauth2-servers/authorization/the-authorization-response/ for description of the parameters.
 message CallbackRequest {
-  option (admiral.api.v1.redacted) = true;
+  option (admiral.common.v1.redacted) = true;
 
   string code = 1;
   string state = 2;
@@ -63,7 +64,7 @@ message CallbackRequest {
 }
 
 message CallbackResponse {
-  option (admiral.api.v1.redacted) = true;
+  option (admiral.common.v1.redacted) = true;
 
   // This is the token that the user should present. Note: this response is only valid in a gRPC context. In an HTTP
   // context the user will be redirected.
@@ -74,7 +75,7 @@ message CallbackResponse {
 }
 
 message CreateTokenRequest {
-  option (admiral.api.v1.redacted) = true;
+  option (admiral.common.v1.redacted) = true;
 
   // The subject to issue this token for.
   string subject = 1 [ (validate.rules).string = {min_bytes : 1} ];
@@ -93,7 +94,7 @@ message CreateTokenRequest {
 }
 
 message CreateTokenResponse {
-  option (admiral.api.v1.redacted) = true;
+  option (admiral.common.v1.redacted) = true;
 
   // The access token associated with the newly created token.
   string access_token = 1;

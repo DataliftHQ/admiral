@@ -15,8 +15,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	commonv1 "go.datalift.io/admiral/common/api/api/v1"
 	auditv1 "go.datalift.io/admiral/common/api/audit/v1"
+	commonv1 "go.datalift.io/admiral/common/api/common/v1"
 )
 
 var (
@@ -185,11 +185,11 @@ func HydratedPatternForProto(pb proto.Message) (string, error) {
 }
 
 // ExtractPatternValuesFromString takes a string value and maps the patterns from a proto pattern
-// this is utilized by the resolver search api
+// this is utilized by the resolver search common
 //
 // For example given the following proto pattern:
 //
-//	option (admiral.api.v1.id).patterns = {
+//	option (admiral.common.v1.id).patterns = {
 //		pattern : "{cluster}/{namespace}/{name}"
 //	};
 //

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+
+	authnv1 "go.datalift.io/admiral/common/api/authn/v1"
 )
 
 type MockIssuer struct {

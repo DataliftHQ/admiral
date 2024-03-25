@@ -18,7 +18,7 @@ import (
 	"go.datalift.io/admiral/server/service"
 )
 
-const StorageName = "clutch.service.authn.storage"
+const StorageName = "admiral.service.authn.storage"
 
 func NewStorage(cfg *anypb.Any, logger *zap.Logger, scope tally.Scope) (service.Service, error) {
 	c := &authnv1.StorageConfig{}

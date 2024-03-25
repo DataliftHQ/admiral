@@ -56,7 +56,7 @@ func (m *mid) UnaryInterceptor() grpc.UnaryServerInterceptor {
 			s = status.New(codes.OK, "")
 		}
 		code := s.Code()
-		// api logger context fields
+		// common logger context fields
 		fields := []zap.Field{
 			zap.String("service", service),
 			zap.String("method", method),

@@ -1,13 +1,14 @@
-import './App.css'
+import React from 'react'
+import { RouterProvider } from 'react-router-dom'
+
+import router from './routes'
+import NavigationScroll from './components/navigation-scroll'
 
 function App() {
   return (
-    <>
-      <h1>Admiral - Platform Orchestrator</h1>
-      <p>
-        Designed to empower developers in accelerating the development, deployment, and seamless management of their applications.
-      </p>
-    </>
+    <NavigationScroll>
+      <RouterProvider router={router} />
+    </NavigationScroll>
   )
 }
 

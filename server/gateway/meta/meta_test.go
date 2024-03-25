@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
-	commonv1 "go.datalift.io/admiral/common/api/api/v1"
+	commonv1 "go.datalift.io/admiral/common/api/common/v1"
 	"go.datalift.io/admiral/server/endpoint/healthcheck"
 	endpointmock "go.datalift.io/admiral/server/mock/endpoint"
 )

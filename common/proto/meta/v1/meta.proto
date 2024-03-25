@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package admiral.meta.v1;
+
+import "google/api/annotations.proto";
+
+import "common/v1/annotations.proto";
+
+service MetaAPI {
+  rpc GetMeta(GetMetaRequest) returns (GetMetaResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/meta"
+    };
+    option (admiral.common.v1.action).type = READ;
+  }
+}
+
+message GetMetaRequest {
+}
+
+message GetMetaResponse {
+  string foo = 1;
+}

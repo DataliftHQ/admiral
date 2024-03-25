@@ -26,7 +26,7 @@ func TestModule(t *testing.T) {
 }
 
 func TestAPI(t *testing.T) {
-	api := newAPI()
+	api := newHealthcheckAPI()
 	resp, err := api.Healthcheck(context.Background(), &healthcheckv1.HealthcheckRequest{})
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)

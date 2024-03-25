@@ -4,7 +4,7 @@ package admiral.healthcheck.v1;
 
 import "google/api/annotations.proto";
 
-import "api/v1/annotations.proto";
+import "common/v1/annotations.proto";
 
 service HealthcheckAPI {
   rpc Healthcheck(HealthcheckRequest) returns (HealthcheckResponse) {
@@ -12,8 +12,8 @@ service HealthcheckAPI {
       get: "/api/v1/healthcheck"
       additional_bindings: {get: "/healthz"}
     };
-    option (admiral.api.v1.action).type = READ;
-    option (admiral.api.v1.disable_audit) = true;
+    option (admiral.common.v1.action).type = READ;
+    option (admiral.common.v1.disable_audit) = true;
   }
 }
 

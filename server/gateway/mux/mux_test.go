@@ -180,7 +180,7 @@ func TestCustomResponseForwarderLocationStatusOverrideAndRefreshToken(t *testing
 	assert.NoError(t, err)
 	assert.Equal(t, 304, rec.Code)
 	assert.Contains(t, rec.Header().Values("Set-Cookie"), "token=myToken; Path=/; Secure")
-	assert.Contains(t, rec.Header().Values("Set-Cookie"), "refreshToken=myRefreshToken; Path=/api/v1/authn/login; HttpOnly; Secure")
+	assert.Contains(t, rec.Header().Values("Set-Cookie"), "refreshToken=myRefreshToken; Path=/common/v1/authn/login; HttpOnly; Secure")
 	assert.Equal(t, "https://example.com", rec.Header().Get("Location"))
 }
 

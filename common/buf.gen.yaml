@@ -25,3 +25,5 @@ plugins:
     out: api
     opt:
       - paths=source_relative
+  - plugin: buf.build/bufbuild/es
+    out: ../web/src/api

@@ -9,8 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "google/rpc/status.proto";
 import "validate/validate.proto";
 
-import "api/v1/annotations.proto";
-import "api/v1/schema.proto";
+import "common/v1/annotations.proto";
+import "common/v1/schema.proto";
 
 service AuditAPI {
   rpc GetEvents(GetEventsRequest) returns (GetEventsResponse) {
@@ -18,7 +18,7 @@ service AuditAPI {
       post : "/v1/audit/getEvents",
       body : "*"
     };
-    option (admiral.api.v1.action).type = READ;
+    option (admiral.common.v1.action).type = READ;
   }
 
   rpc GetEvent(GetEventRequest) returns (GetEventResponse) {
@@ -26,7 +26,7 @@ service AuditAPI {
       post : "/v1/audit/getEvent",
       body : "*"
     };
-    option (admiral.api.v1.action).type = READ;
+    option (admiral.common.v1.action).type = READ;
   }
 }
 
@@ -49,7 +49,7 @@ message GetEventsRequest {
 }
 
 message Resource {
-  option (admiral.api.v1.id).patterns = {
+  option (admiral.common.v1.id).patterns = {
     type_url : "admiral.audit.v1.Resource",
     pattern : "{type_url}"
   };
@@ -67,7 +67,7 @@ message ResponseMetadata {
 }
 
 message RequestEvent {
-  option (admiral.api.v1.reference).fields = "resources";
+  option (admiral.common.v1.reference).fields = "resources";
 
   // What attempted the action.
   string username = 1 [ (validate.rules).string.min_len = 1 ];
@@ -79,7 +79,7 @@ message RequestEvent {
   string method_name = 3 [ (validate.rules).string.min_len = 1 ];
 
   // The type of operation being performed.
-  admiral.api.v1.ActionType type = 4 [ (validate.rules).enum = {defined_only : true} ];
+  admiral.common.v1.ActionType type = 4 [ (validate.rules).enum = {defined_only : true} ];
 
   // The status of the overall operation.
   google.rpc.Status status = 5;

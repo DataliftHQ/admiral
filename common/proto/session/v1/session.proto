@@ -4,14 +4,14 @@ package admiral.session.v1;
 
 import "google/api/annotations.proto";
 
-import "api/v1/annotations.proto";
+import "common/v1/annotations.proto";
 
 service SessionAPI {
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
     option (google.api.http) = {
-      get: "/api/v1/settings"
+      get: "/api/v1/session"
     };
-    option (admiral.api.v1.action).type = READ;
+    option (admiral.common.v1.action).type = READ;
   }
 }
 

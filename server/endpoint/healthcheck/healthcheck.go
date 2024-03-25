@@ -12,18 +12,18 @@ import (
 )
 
 const (
-	Name = "admiral.module.healthcheck"
+	Name = "admiral.endpoint.healthcheck"
 )
+
+type endp struct {
+	api healthcheckv1.HealthcheckAPIServer
+}
 
 func New(*anypb.Any, *zap.Logger, tally.Scope) (endpoint.Endpoint, error) {
 	endp := &endp{
 		api: newHealthcheckAPI(),
 	}
 	return endp, nil
-}
-
-type endp struct {
-	api healthcheckv1.HealthcheckAPIServer
 }
 
 func (e *endp) Register(r endpoint.Registrar) error {

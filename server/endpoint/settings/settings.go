@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Name = "admiral.module.settings"
+	Name = "admiral.endpoint.settings"
 )
 
 func New(_ *anypb.Any, log *zap.Logger, scope tally.Scope) (endpoint.Endpoint, error) {
@@ -40,7 +40,6 @@ func newSettingsAPI() settingsv1.SettingsAPIServer {
 type settingsAPI struct{}
 
 func (a *settingsAPI) Settings(context.Context, *settingsv1.SettingsRequest) (*settingsv1.SettingsResponse, error) {
-
 	return &settingsv1.SettingsResponse{
 		Url: "http://localhost:8080",
 		OidcConfig: &settingsv1.OIDCConfig{

@@ -19,10 +19,10 @@ import (
 	"go.datalift.io/admiral/server/service/authn"
 )
 
-const Name = "clutch.middleware.authn"
+const Name = "admiral.middleware.authn"
 
 func New(cfg *any.Any, logger *zap.Logger, scope tally.Scope) (middleware.Middleware, error) {
-	svc, ok := service.Registry["clutch.service.authn"]
+	svc, ok := service.Registry["admiral.service.authn"]
 	if !ok {
 		return nil, errors.New("unable to get authn service")
 	}
@@ -77,9 +77,9 @@ func (m *mid) UnaryInterceptor() grpc.UnaryServerInterceptor {
 // getToken looks for the token in the authorization header or cookies.
 func getToken(md metadata.MD) (string, error) {
 	if tokens := md.Get("authorization"); len(tokens) > 0 {
-		splitToken := strings.Split(tokens[0], "Token")
+		splitToken := strings.Split(tokens[0], "Bearer")
 		if len(splitToken) != 2 {
-			return "", errors.New("bad token format, expected Authorization: Token <token>")
+			return "", errors.New("bad token format, expected Authorization: Bearer <token>")
 		}
 		return strings.TrimSpace(splitToken[1]), nil
 	}

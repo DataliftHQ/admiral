@@ -105,7 +105,7 @@ func newRootCmd(version version.Version, exit func(int)) *rootCmd {
 	cmd.PersistentFlags().StringVar(&clientOpts.AccessToken, "access-token", "", "access token")
 
 	// server options
-	cmd.PersistentFlags().StringVarP(&clientOpts.ServerAddress, "server", "s", env.StringFromEnv(common.EnvServerAddress, ""), "host:port of the api server")
+	cmd.PersistentFlags().StringVarP(&clientOpts.ServerAddress, "server", "s", env.StringFromEnv(common.EnvServerAddress, ""), "host:port of the common server")
 	cmd.PersistentFlags().BoolVar(&clientOpts.PlainText, "plaintext", false, "disable tls")
 	cmd.PersistentFlags().BoolVarP(&clientOpts.Insecure, "insecure", "i", false, "skip server certificate and domain verification")
 	cmd.PersistentFlags().StringVar(&clientOpts.CertFile, "server-crt", "", "server certificate file")

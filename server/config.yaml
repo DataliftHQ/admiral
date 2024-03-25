@@ -21,11 +21,47 @@ gateway:
   middleware:
     - name: admiral.middleware.stats
     - name: admiral.middleware.validate
+    - name: admiral.middleware.authn
   listener:
     tcp:
       address: 0.0.0.0
       port: 8080
       secure: false
 endpoints:
-  - name: admiral.module.healthcheck
-  - name: admiral.module.settings
+  - name: admiral.endpoint.healthcheck
+  - name: admiral.endpoint.foo
+  - name: admiral.endpoint.settings
+  - name: admiral.endpoint.users
+  - name: admiral.endpoint.meta
+  - name: admiral.endpoint.authn
+services:
+  - name: admiral.service.db.postgres
+    typed_config:
+      "@type": types.google.com/admiral.config.service.db.postgres.v1.Config
+      connection:
+        host: localhost
+        port: 5432
+        dbname: admiral
+        user: admiral
+        password: secret
+        ssl_mode: DISABLE
+  - name: admiral.service.authn
+    typed_config:
+      "@type": types.google.com/admiral.config.service.authn.v1.Config
+      oidc:
+        issuer: http://localhost:9090/realms/admiral
+        client_id: admiral
+        client_secret: j10AhU98vlDegAC6dgroYc8HmvfHMEvh
+        redirect_url: http://localhost:8888/auth/callback
+        scopes:
+          - openid
+          - profile
+          - email
+          - offline_access
+      session_secret: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAodN+hKi1epN5SVGD2IPHd/7O9LxHOKEYntvkYEDsGM5g+rhda40fR6OwEp+p6+03bNSH/YhXYEiXwitsOaZ2KLOQnwaMMLHGQ7UUxfs9IdhPyE7J2Il2U/sHWswxoPmjAroBXjdbHLZmxofZLatVgXKTkxcc6Bzf9AWIEjDrvgLlaKevf1GpSShxuaEIiVsJOippE5xKIs/s8bi55aRihViTm6146P65nIxP75STgCcA9EHUicXBhYujf4i6JWhYSwjveIbS8Hep30IWxfMm91N/TNhiBNq1heyDIEybtOYMdFhf9u5queOYirz2HdBxUA8JxoPeQ98839DhlQ9XdwIDAQAB
+      enable_service_token_creation: true
+  - name: admiral.service.temporal
+    typed_config:
+      "@type": types.google.com/admiral.config.service.temporal.v1.Config
+      host: localhost
+      port: 7233

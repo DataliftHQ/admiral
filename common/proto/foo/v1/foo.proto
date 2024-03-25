@@ -4,14 +4,14 @@ package admiral.foo.v1;
 
 import "google/api/annotations.proto";
 
-import "api/v1/annotations.proto";
+import "common/v1/annotations.proto";
 
 service FooAPI {
   rpc GetFoo(GetFooRequest) returns (GetFooResponse) {
     option (google.api.http) = {
       get: "/api/v1/foo"
     };
-    option (admiral.api.v1.action).type = READ;
+    option (admiral.common.v1.action).type = READ;
   }
 }
 

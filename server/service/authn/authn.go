@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/uber-go/tally/v4"
+	authnv1 "go.datalift.io/admiral/server/config/service/authn/v1"
 	"go.datalift.io/admiral/server/service"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -12,15 +13,28 @@ import (
 )
 
 var AlwaysAllowedMethods = []string{
-	"/clutch.authn.v1.AuthnAPI/Callback",
-	"/clutch.authn.v1.AuthnAPI/Login",
-	"/clutch.healthcheck.v1.HealthcheckAPI/*",
+	"/admiral.authn.v1.AuthnAPI/Callback",
+	"/admiral.authn.v1.AuthnAPI/Login",
+	"/admiral.healthcheck.v1.HealthcheckAPI/*",
+	"/admiral.settings.v1.SettingsAPI/*",
 }
 
 const Name = "admiral.service.authn"
 
-func New(cfg *anypb.Any, logger *zap.Logger, scope tally.Scope) (service.Service, error) {
-	return nil, fmt.Errorf("not implemented")
+func New(cfg *anypb.Any, _ *zap.Logger, _ tally.Scope) (service.Service, error) {
+	config := &authnv1.Config{}
+	if err := cfg.UnmarshalTo(config); err != nil {
+		return nil, err
+	}
+
+	tokenStorage, _ := service.Registry[StorageName].(Storage)
+
+	switch t := config.Type.(type) {
+	case *authnv1.Config_Oidc:
+		return NewOIDCProvider(context.Background(), config, tokenStorage)
+	default:
+		return nil, fmt.Errorf("authn provider type '%T' not implemented", t)
+	}
 }
 
 // Standardized representation of a user's claims.
@@ -44,7 +58,7 @@ type Issuer interface {
 	// CreateToken creates a new OAuth2 for the provided subject with the provided expiration. If expiry is nil,
 	// the token will never expire.
 	//CreateToken(ctx context.Context, subject string, tokenType authnmodulev1.CreateTokenRequest_TokenType, expiry *time.Duration) (token *oauth2.Token, err error)
-	//RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error)
+	RefreshToken(ctx context.Context, token *oauth2.Token) (*oauth2.Token, error)
 }
 
 type Service interface {

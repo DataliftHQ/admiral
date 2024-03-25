@@ -18,7 +18,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/anypb"
 
-	apiv1 "go.datalift.io/admiral/common/api/api/v1"
+	commonv1 "go.datalift.io/admiral/common/api/common/v1"
 )
 
 // ensure the imports are used
@@ -36,7 +36,7 @@ var (
 	_ = anypb.Any{}
 	_ = sort.Sort
 
-	_ = apiv1.ActionType(0)
+	_ = commonv1.ActionType(0)
 )
 
 // Validate checks the field values on Subject with the rules defined in the

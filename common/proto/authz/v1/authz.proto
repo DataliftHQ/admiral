@@ -3,9 +3,10 @@ syntax = "proto3";
 package admiral.authz.v1;
 
 import "google/api/annotations.proto";
-import "api/v1/annotations.proto";
-import "api/v1/schema.proto";
 import "validate/validate.proto";
+
+import "common/v1/annotations.proto";
+import "common/v1/schema.proto";
 
 service AuthzAPI {
   rpc Check(CheckRequest) returns (CheckResponse) {
@@ -13,7 +14,7 @@ service AuthzAPI {
       post : "/v1/authz/check"
       body : "*"
     };
-    option (admiral.api.v1.action).type = READ;
+    option (admiral.common.v1.action).type = READ;
   }
 }
 
@@ -25,7 +26,7 @@ message Subject {
 message CheckRequest {
   Subject subject = 1 [ (validate.rules).message.required = true ];
   string method = 2;
-  admiral.api.v1.ActionType action_type = 3;
+  admiral.common.v1.ActionType action_type = 3;
   string resource = 4;
 }
 
